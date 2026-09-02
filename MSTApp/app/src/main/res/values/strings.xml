@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">MSTPerfumes</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="quote_symbol">&quot;</string>
+    <string name="five_stars">★★★★★</string>
+    <string name="testimonial_placeholder">Testimonial text goes here</string>
+    <string name="customer_name_placeholder">Customer Name</string>
+    <string name="verified_buyer">Verified Buyer</string>
+</resources>

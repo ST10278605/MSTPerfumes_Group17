@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp"
+    app:cardUseCompatPadding="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <!-- Product Image -->
+        <ImageView
+            android:id="@+id/ivProductImage"
+            android:layout_width="match_parent"
+            android:layout_height="160dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_launcher_foreground"
+            android:background="#F0F0F0" />
+
+        <!-- Product Name - FIXED: Now wraps properly -->
+        <TextView
+            android:id="@+id/tvProductName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Product Name"
+            android:textColor="#2C1810"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:maxLines="2"
+            android:ellipsize="end" />
+
+        <!-- Retail Price -->
+        <TextView
+            android:id="@+id/tvRetailPrice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Retail Price: R0"
+            android:textColor="#666666"
+            android:textSize="12sp" />
+
+        <!-- Bulk Price -->
+        <TextView
+            android:id="@+id/tvBulkPrice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Bulk Price: R0"
+            android:textColor="#D4AF37"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <!-- Scent Profile -->
+        <TextView
+            android:id="@+id/tvScentProfile"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="8dp"
+            android:text="Scent Profile"
+            android:textColor="#666666"
+            android:textSize="12sp"
+            android:textStyle="italic"
+            android:maxLines="2"
+            android:ellipsize="end" />
+
+        <!-- Add to Cart Button -->
+        <Button
+            android:id="@+id/btnAddToCart"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_marginTop="8dp"
+            android:backgroundTint="#2C1810"
+            android:text="Add to Cart"
+            android:textColor="@android:color/white"
+            android:textSize="13sp" />
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

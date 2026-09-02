@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="2dp"
+    app:cardUseCompatPadding="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Topic Title Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <!-- Topic Icon -->
+            <TextView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="#2C1810"
+                android:gravity="center"
+                android:text="💬"
+                android:textSize="18sp" />
+
+            <!-- Title and Meta -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="12dp"
+                android:orientation="vertical">
+
+                <!-- Topic Title - FIXED: Now wraps properly -->
+                <TextView
+                    android:id="@+id/tvTopicTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Topic Title"
+                    android:textColor="#2C1810"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:maxLines="2"
+                    android:ellipsize="end" />
+
+                <TextView
+                    android:id="@+id/tvTopicMeta"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Posted by: User | 0 Replies"
+                    android:textColor="#666666"
+                    android:textSize="11sp" />
+
+            </LinearLayout>
+
+            <!-- Reply Count Badge -->
+            <TextView
+                android:id="@+id/tvReplyCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="#E8E0D5"
+                android:paddingLeft="8dp"
+                android:paddingRight="8dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp"
+                android:text="0"
+                android:textColor="#2C1810"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+        <!-- Topic Excerpt - FIXED: Shows full preview -->
+        <TextView
+            android:id="@+id/tvTopicExcerpt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:layout_marginStart="44dp"
+            android:text="Topic excerpt goes here showing a preview of the discussion content..."
+            android:textColor="#666666"
+            android:textSize="13sp"
+            android:maxLines="3"
+            android:ellipsize="end"
+            android:lineSpacingExtra="4dp" />
+
+        <!-- Topic Footer -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:layout_marginStart="44dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Last activity: "
+                android:textColor="#999999"
+                android:textSize="10sp" />
+
+            <TextView
+                android:id="@+id/tvLastActivity"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2h ago"
+                android:textColor="#D4AF37"
+                android:textSize="10sp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>
