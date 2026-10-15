@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="170dp"
+    android:background="#2C1810"
+    android:gravity="bottom"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <ImageView
+        android:id="@+id/ivNavProfile"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:src="@android:drawable/ic_menu_myplaces"
+        android:contentDescription="User Profile" />
+
+    <TextView
+        android:id="@+id/tvNavUserName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="Welcome, Guest User"
+        android:textColor="#D4AF37"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tvNavUserEmail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:text="user@mstperfumes.com"
+        android:textColor="#CCCCCC"
+        android:textSize="13sp" />
+
+</LinearLayout>

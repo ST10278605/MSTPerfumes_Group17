@@ -13,6 +13,7 @@ glide = "4.16.0"
 cardview = "1.0.0"
 viewpager2 = "1.0.0"
 drawerlayout = "1.2.0"
+playServicesMaps = "18.2.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -27,6 +28,7 @@ glide = { group = "com.github.bumptech.glide", name = "glide", version.ref = "gl
 cardview = { group = "androidx.cardview", name = "cardview", version.ref = "cardview" }
 viewpager2 = { group = "androidx.viewpager2", name = "viewpager2", version.ref = "viewpager2" }
 androidx-drawerlayout = { group = "androidx.drawerlayout", name = "drawerlayout", version.ref = "drawerlayout" }
+google-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "playServicesMaps" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

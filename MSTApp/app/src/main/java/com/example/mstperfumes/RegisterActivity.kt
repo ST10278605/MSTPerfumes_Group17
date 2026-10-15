@@ -23,7 +23,19 @@ class RegisterActivity : AppCompatActivity() {
 
             if (name.isNotEmpty() && email.isNotEmpty() && password.isNotEmpty() && confirmPassword.isNotEmpty()) {
                 if (password == confirmPassword) {
-                    Toast.makeText(this, "Registration Successful!", Toast.LENGTH_SHORT).show()
+                    val dbRepo = com.example.mstperfumes.data.DatabaseRepository(this)
+                    val newUser = dbRepo.registerUser(name, email, password)
+                    com.example.mstperfumes.data.UserRepository.setActiveUser(newUser)
+
+                    val sharedPrefs = getSharedPreferences("UserPrefs", MODE_PRIVATE)
+                    with(sharedPrefs.edit()) {
+                        putString("userName", newUser.name)
+                        putString("fullName", newUser.name)
+                        putString("userEmail", newUser.email)
+                        apply()
+                    }
+
+                    Toast.makeText(this, "Account Created Successfully! Welcome ${newUser.name}", Toast.LENGTH_SHORT).show()
                     val intent = Intent(this, MainActivity::class.java)
                     startActivity(intent)
                     finishAffinity() // Clear activity stack

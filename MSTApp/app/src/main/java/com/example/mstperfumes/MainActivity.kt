@@ -42,6 +42,7 @@ class MainActivity : AppCompatActivity() {
 
         setupViewPager()
         setupBottomNavigation()
+        setupNavHeader()
 
         // Handle Navigation Drawer item clicks
         navView.setNavigationItemSelectedListener { menuItem ->
@@ -50,8 +51,21 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_products -> binding.viewPager.currentItem = 1
                 R.id.nav_forum -> binding.viewPager.currentItem = 2
                 R.id.nav_cart -> binding.viewPager.currentItem = 3
+                R.id.nav_profile -> binding.viewPager.currentItem = 5
+                R.id.nav_track -> {
+                    val intent = Intent(this, TrackParcelActivity::class.java)
+                    startActivity(intent)
+                }
+                R.id.nav_admin -> {
+                    val intent = Intent(this, AdminLoginActivity::class.java)
+                    startActivity(intent)
+                }
                 R.id.nav_logout -> {
-                    Toast.makeText(this, "Logging out...", Toast.LENGTH_SHORT).show()
+                    com.example.mstperfumes.data.UserRepository.clearActiveSession()
+                    val sharedPrefs = getSharedPreferences("UserPrefs", MODE_PRIVATE)
+                    sharedPrefs.edit().clear().apply()
+
+                    Toast.makeText(this, "Logged out successfully", Toast.LENGTH_SHORT).show()
                     val intent = Intent(this, LoginActivity::class.java)
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                     startActivity(intent)
@@ -75,7 +89,8 @@ class MainActivity : AppCompatActivity() {
                     1 -> R.id.nav_products
                     2 -> R.id.nav_forum
                     3 -> R.id.nav_cart
-                    4 -> R.id.nav_cart // Keep Cart highlighted when on Checkout
+                    4 -> R.id.nav_cart // Checkout
+                    5 -> R.id.nav_profile
                     else -> R.id.nav_home
                 }
                 binding.bottomNavigation.selectedItemId = menuId
@@ -88,10 +103,28 @@ class MainActivity : AppCompatActivity() {
                     2 -> "Community Forum"
                     3 -> "Your Cart"
                     4 -> "Checkout"
+                    5 -> "My Account & Profile"
                     else -> "MST PERFUMES"
                 }
             }
         })
+    }
+
+    private fun setupNavHeader() {
+        val navView: NavigationView = binding.navView
+        if (navView.headerCount > 0) {
+            val headerView = navView.getHeaderView(0)
+            val tvNavUserName = headerView.findViewById<android.widget.TextView>(R.id.tvNavUserName)
+            val tvNavUserEmail = headerView.findViewById<android.widget.TextView>(R.id.tvNavUserEmail)
+
+            val sharedPrefs = getSharedPreferences("UserPrefs", MODE_PRIVATE)
+            val activeUser = com.example.mstperfumes.data.UserRepository.getActiveUser()
+            val userName = activeUser?.name ?: sharedPrefs.getString("userName", "Guest User")
+            val userEmail = activeUser?.email ?: sharedPrefs.getString("userEmail", "user@mstperfumes.com")
+
+            tvNavUserName?.text = "Welcome, $userName"
+            tvNavUserEmail?.text = userEmail
+        }
     }
 
     private fun setupBottomNavigation() {
@@ -101,6 +134,7 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_products -> binding.viewPager.currentItem = 1
                 R.id.nav_forum -> binding.viewPager.currentItem = 2
                 R.id.nav_cart -> binding.viewPager.currentItem = 3
+                R.id.nav_profile -> binding.viewPager.currentItem = 5
             }
             true
         }

@@ -27,9 +27,22 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        updateWelcomeHeader()
         setupTestimonials()
         setupContactForm()
         updateMemberUI()
+    }
+
+    private fun updateWelcomeHeader() {
+        val sharedPrefs = requireContext().getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE)
+        val userName = sharedPrefs.getString("userName", null)
+            ?: sharedPrefs.getString("fullName", null)
+
+        if (!userName.isNullOrEmpty()) {
+            binding.tvWelcomeUser.text = "Hi $userName, welcome to MST perfumes of the future"
+        } else {
+            binding.tvWelcomeUser.text = "Hi, welcome to MST perfumes of the future"
+        }
     }
 
     private fun setupTestimonials() {
