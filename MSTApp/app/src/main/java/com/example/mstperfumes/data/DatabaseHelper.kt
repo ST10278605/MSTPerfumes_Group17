@@ -12,10 +12,15 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         private const val DATABASE_NAME = "mst_perfumes_db.db"
         private const val DATABASE_VERSION = 2
 
-        // MD5 Password Hashing Helper Function
+        // Password Hashing Helper Functions (MD5 & SHA-256 Encryption)
         fun md5(input: String): String {
             val md = MessageDigest.getInstance("MD5")
             return BigInteger(1, md.digest(input.toByteArray())).toString(16).padStart(32, '0')
+        }
+
+        fun sha256(input: String): String {
+            val md = MessageDigest.getInstance("SHA-256")
+            return BigInteger(1, md.digest(input.toByteArray())).toString(16).padStart(64, '0')
         }
 
         // tblUser - Customer accounts
