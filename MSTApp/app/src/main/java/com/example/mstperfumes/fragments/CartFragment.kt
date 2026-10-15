@@ -64,11 +64,12 @@ class CartFragment : Fragment() {
             subtotal += item.product.bulkPrice * item.quantity
         }
 
-        val shipping = if (subtotal > 0) 100.0 else 0.0
+        // Free Shipping for orders over R500
+        val shipping = if (subtotal > 500.0) 0.0 else if (subtotal > 0) 100.0 else 0.0
         val total = subtotal + shipping
 
         binding.tvSubtotal.text = "Subtotal: ${currencyFormat.format(subtotal)}"
-        binding.tvShipping.text = "Shipping: ${currencyFormat.format(shipping)}"
+        binding.tvShipping.text = if (shipping == 0.0 && subtotal > 0) "Shipping: FREE (Orders over R500)" else "Shipping: ${currencyFormat.format(shipping)}"
         binding.tvTotal.text = "Total: ${currencyFormat.format(total)}"
 
         if (cartItems.isEmpty()) {

@@ -11,7 +11,7 @@ import com.example.mstperfumes.fragments.ProductsFragment
 
 class MainPagerAdapter(fragmentActivity: FragmentActivity) : FragmentStateAdapter(fragmentActivity) {
 
-    override fun getItemCount(): Int = 5
+    override fun getItemCount(): Int = 6
 
     override fun createFragment(position: Int): Fragment {
         return when (position) {
@@ -20,6 +20,7 @@ class MainPagerAdapter(fragmentActivity: FragmentActivity) : FragmentStateAdapte
             2 -> ForumFragment()
             3 -> CartFragment()
             4 -> CheckoutFragment()
+            5 -> com.example.mstperfumes.fragments.ProfileFragment()
             else -> HomeFragment()
         }
     }

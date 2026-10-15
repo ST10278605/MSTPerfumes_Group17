@@ -32,6 +32,11 @@ class ProductAdapter(
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(product: Product) {
+            val context = binding.root.context
+            val dbRepo = com.example.mstperfumes.data.DatabaseRepository(context)
+            val activeUser = com.example.mstperfumes.data.UserRepository.getActiveUser()
+            val userId = activeUser?.id ?: 1
+
             binding.apply {
                 tvProductName.text = "${product.name} (${product.size})"
                 tvRetailPrice.text = "Retail: ${currencyFormat.format(product.retailPrice)}"
@@ -42,6 +47,21 @@ class ProductAdapter(
                     ivProductImage.setImageResource(product.imageResId)
                 } else {
                     ivProductImage.setImageResource(android.R.drawable.ic_menu_gallery)
+                }
+
+                // Wishlist state
+                var inWishlist = dbRepo.isInWishlist(userId, product.id)
+                btnWishlist.setImageResource(
+                    if (inWishlist) android.R.drawable.btn_star_big_on else android.R.drawable.btn_star_big_off
+                )
+
+                btnWishlist.setOnClickListener {
+                    inWishlist = dbRepo.toggleWishlist(userId, product)
+                    btnWishlist.setImageResource(
+                        if (inWishlist) android.R.drawable.btn_star_big_on else android.R.drawable.btn_star_big_off
+                    )
+                    val msg = if (inWishlist) "${product.name} added to Wishlist ❤️" else "${product.name} removed from Wishlist"
+                    android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
                 }
 
                 btnAddToCart.setOnClickListener {
