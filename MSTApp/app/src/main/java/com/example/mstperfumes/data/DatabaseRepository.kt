@@ -131,6 +131,29 @@ class DatabaseRepository(context: Context) {
         return db.delete(DatabaseHelper.TABLE_USER, "${DatabaseHelper.COL_USER_ID} = ?", arrayOf(userId.toString())) > 0
     }
 
+    fun updateUserProfile(
+        userId: Int,
+        newName: String,
+        newEmail: String,
+        newPhone: String,
+        newAddress: String,
+        newPasswordRaw: String? = null
+    ): Boolean {
+        val db = dbHelper.writableDatabase
+        val values = ContentValues().apply {
+            put(DatabaseHelper.COL_USER_NAME, newName)
+            put(DatabaseHelper.COL_USER_EMAIL, newEmail)
+            put(DatabaseHelper.COL_USER_PHONE, newPhone)
+            put(DatabaseHelper.COL_USER_ADDRESS, newAddress)
+            if (!newPasswordRaw.isNullOrEmpty()) {
+                val hashed = DatabaseHelper.md5(newPasswordRaw)
+                put(DatabaseHelper.COL_USER_PASSWORD_HASH, hashed)
+            }
+        }
+        val rows = db.update(DatabaseHelper.TABLE_USER, values, "${DatabaseHelper.COL_USER_ID} = ?", arrayOf(userId.toString()))
+        return rows > 0
+    }
+
     // ==================== ORDERS & DELIVERY ====================
 
     fun createOrder(

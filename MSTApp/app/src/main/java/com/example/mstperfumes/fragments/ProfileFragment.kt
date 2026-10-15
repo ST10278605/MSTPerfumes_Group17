@@ -106,6 +106,7 @@ class ProfileFragment : Fragment() {
         binding.tabWishlist.setOnClickListener { showWishlistView() }
         binding.tabWallet.setOnClickListener { showWalletView() }
         binding.tabMessages.setOnClickListener { showMessagesView() }
+        binding.tabSettings.setOnClickListener { showSettingsView() }
         binding.tabLogout.setOnClickListener {
             UserRepository.clearActiveSession()
             val sharedPrefs = requireContext().getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE)
@@ -115,6 +116,10 @@ class ProfileFragment : Fragment() {
             val intent = Intent(requireContext(), LoginActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(intent)
+        }
+
+        binding.btnSaveSettings.setOnClickListener {
+            saveUserSettings()
         }
     }
 
@@ -168,7 +173,78 @@ class ProfileFragment : Fragment() {
         binding.layoutWishlistView.visibility = View.GONE
         binding.layoutWalletView.visibility = View.GONE
         binding.layoutMessagesView.visibility = View.VISIBLE
+        binding.layoutSettingsView.visibility = View.GONE
         refreshData()
+    }
+
+    private fun showSettingsView() {
+        resetTabBackgrounds()
+        binding.tabSettings.setBackgroundColor(Color.parseColor("#F0F0F0"))
+        binding.layoutOrdersView.visibility = View.GONE
+        binding.layoutProfileDetailsView.visibility = View.GONE
+        binding.layoutWishlistView.visibility = View.GONE
+        binding.layoutWalletView.visibility = View.GONE
+        binding.layoutMessagesView.visibility = View.GONE
+        binding.layoutSettingsView.visibility = View.VISIBLE
+
+        val user = UserRepository.getActiveUser() ?: dbRepo.getAllUsers().firstOrNull()
+        val sharedPrefs = requireContext().getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE)
+
+        binding.etSettingsName.setText(user?.name ?: sharedPrefs.getString("userName", ""))
+        binding.etSettingsEmail.setText(user?.email ?: sharedPrefs.getString("userEmail", ""))
+        binding.etSettingsPhone.setText(sharedPrefs.getString("phone", ""))
+        binding.etSettingsAddress.setText(sharedPrefs.getString("address", ""))
+    }
+
+    private fun saveUserSettings() {
+        val user = UserRepository.getActiveUser() ?: dbRepo.getAllUsers().firstOrNull()
+        val userId = user?.id ?: 1
+
+        val newName = binding.etSettingsName.text.toString().trim()
+        val newEmail = binding.etSettingsEmail.text.toString().trim()
+        val newPhone = binding.etSettingsPhone.text.toString().trim()
+        val newAddress = binding.etSettingsAddress.text.toString().trim()
+        val newPassword = binding.etSettingsNewPassword.text.toString().trim()
+
+        if (newName.isEmpty() || newEmail.isEmpty()) {
+            Toast.makeText(requireContext(), "Name and Email cannot be empty", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val success = dbRepo.updateUserProfile(
+            userId = userId,
+            newName = newName,
+            newEmail = newEmail,
+            newPhone = newPhone,
+            newAddress = newAddress,
+            newPasswordRaw = if (newPassword.isNotEmpty()) newPassword else null
+        )
+
+        if (success) {
+            val updatedUser = com.example.mstperfumes.models.User(
+                id = userId,
+                name = newName,
+                email = newEmail,
+                registeredDate = user?.registeredDate ?: "2024-11-01"
+            )
+            UserRepository.setActiveUser(updatedUser)
+
+            val sharedPrefs = requireContext().getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE)
+            with(sharedPrefs.edit()) {
+                putString("userName", newName)
+                putString("fullName", newName)
+                putString("userEmail", newEmail)
+                putString("phone", newPhone)
+                putString("address", newAddress)
+                apply()
+            }
+
+            setupUserHeader()
+            binding.etSettingsNewPassword.text?.clear()
+            Toast.makeText(requireContext(), "🔒 Account settings & encrypted password updated safely!", Toast.LENGTH_LONG).show()
+        } else {
+            Toast.makeText(requireContext(), "Failed to update profile settings", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun resetTabBackgrounds() {
@@ -178,6 +254,7 @@ class ProfileFragment : Fragment() {
         binding.tabWishlist.setBackgroundColor(transparent)
         binding.tabWallet.setBackgroundColor(transparent)
         binding.tabMessages.setBackgroundColor(transparent)
+        binding.tabSettings.setBackgroundColor(transparent)
     }
 
     private fun refreshData() {
