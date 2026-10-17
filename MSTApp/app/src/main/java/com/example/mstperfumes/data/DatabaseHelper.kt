@@ -10,7 +10,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
 
     companion object {
         private const val DATABASE_NAME = "mst_perfumes_db.db"
-        private const val DATABASE_VERSION = 2
+        private const val DATABASE_VERSION = 3
 
         // MD5 Password Hashing Helper Function
         fun md5(input: String): String {
@@ -75,11 +75,13 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         const val COL_DELIVERY_TRACKING_CODE = "tracking_code"
         const val COL_DELIVERY_DATE = "date_created"
 
-        // tblContact - Contact form messages
+        // tblContact - Support Tickets & Contact form messages
         const val TABLE_CONTACT = "tblContact"
         const val COL_CONTACT_ID = "id"
         const val COL_CONTACT_NAME = "name"
         const val COL_CONTACT_EMAIL = "email"
+        const val COL_CONTACT_CATEGORY = "category"
+        const val COL_CONTACT_SUBJECT = "subject"
         const val COL_CONTACT_MESSAGE = "message"
         const val COL_CONTACT_STATUS = "status"
         const val COL_CONTACT_DATE = "date_sent"
@@ -184,8 +186,10 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 $COL_CONTACT_ID INTEGER PRIMARY KEY AUTOINCREMENT,
                 $COL_CONTACT_NAME TEXT NOT NULL,
                 $COL_CONTACT_EMAIL TEXT NOT NULL,
+                $COL_CONTACT_CATEGORY TEXT NOT NULL DEFAULT 'General',
+                $COL_CONTACT_SUBJECT TEXT NOT NULL DEFAULT 'Support Inquiry',
                 $COL_CONTACT_MESSAGE TEXT NOT NULL,
-                $COL_CONTACT_STATUS TEXT NOT NULL DEFAULT 'New',
+                $COL_CONTACT_STATUS TEXT NOT NULL DEFAULT 'Pending',
                 $COL_CONTACT_DATE TEXT NOT NULL
             )
         """.trimIndent()
@@ -255,6 +259,10 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         // Seed Communication Messages
         db.execSQL("INSERT INTO $TABLE_COMMUNICATION ($COL_COMM_SENDER_ROLE, $COL_COMM_RECEIVER_ID, $COL_COMM_RECEIVER_NAME, $COL_COMM_MESSAGE_TYPE, $COL_COMM_ORDER_CODE, $COL_COMM_SUBJECT, $COL_COMM_BODY, $COL_COMM_IS_READ, $COL_COMM_DATE) VALUES ('Admin', 1, 'Siphesihle', 'Order-related', 'B40153759-01', 'Order B40153759-01 Dispatched', 'Your perfume order has been dispatched with Sipho Khumalo (Toyota Quantum GP 842 MST).', 0, '05 Sept 2026');")
         db.execSQL("INSERT INTO $TABLE_COMMUNICATION ($COL_COMM_SENDER_ROLE, $COL_COMM_RECEIVER_ID, $COL_COMM_RECEIVER_NAME, $COL_COMM_MESSAGE_TYPE, $COL_COMM_ORDER_CODE, $COL_COMM_SUBJECT, $COL_COMM_BODY, $COL_COMM_IS_READ, $COL_COMM_DATE) VALUES ('Admin', 1, 'Siphesihle', 'General', NULL, 'Welcome Gold Member!', 'Welcome to MST Perfumes Gold Membership. You have unlocked a 10% wholesale discount.', 0, '01 Nov 2024');")
+
+        // Seed Initial Support Tickets
+        db.execSQL("INSERT INTO $TABLE_CONTACT ($COL_CONTACT_NAME, $COL_CONTACT_EMAIL, $COL_CONTACT_CATEGORY, $COL_CONTACT_SUBJECT, $COL_CONTACT_MESSAGE, $COL_CONTACT_STATUS, $COL_CONTACT_DATE) VALUES ('Siphesihle', 'siphe@mstperfumes.com', 'Orders & Tracking', 'Delivery schedule for Order B40153759-01', 'Hi team, please confirm the estimated delivery time for my Sandton address.', 'In Progress', '15 Oct 2026');")
+        db.execSQL("INSERT INTO $TABLE_CONTACT ($COL_CONTACT_NAME, $COL_CONTACT_EMAIL, $COL_CONTACT_CATEGORY, $COL_CONTACT_SUBJECT, $COL_CONTACT_MESSAGE, $COL_CONTACT_STATUS, $COL_CONTACT_DATE) VALUES ('Lerato Molefe', 'lerato@gmail.com', 'Products & Wholesale', 'Wholesale Reseller Inquiry', 'Good day, I would like to inquire about placing a bulk order for 50 units of Citrus Bloom.', 'Resolved', '12 Oct 2026');")
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {

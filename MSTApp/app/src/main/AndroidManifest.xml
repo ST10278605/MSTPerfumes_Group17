@@ -49,6 +49,11 @@
             android:exported="false"
             android:label="Live Order Tracking" />
 
+        <activity
+            android:name=".HelpSupportActivity"
+            android:exported="false"
+            android:label="Help &amp; Documentation" />
+
     </application>
 
 </manifest>
