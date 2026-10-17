@@ -56,6 +56,10 @@ class MainActivity : AppCompatActivity() {
                     val intent = Intent(this, TrackParcelActivity::class.java)
                     startActivity(intent)
                 }
+                R.id.nav_help -> {
+                    val intent = Intent(this, HelpSupportActivity::class.java)
+                    startActivity(intent)
+                }
                 R.id.nav_admin -> {
                     val intent = Intent(this, AdminLoginActivity::class.java)
                     startActivity(intent)
@@ -179,4 +183,18 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun isUserMember(): Boolean = isMember
+
+    override fun onCreateOptionsMenu(menu: android.view.Menu?): Boolean {
+        menuInflater.inflate(R.menu.main_toolbar_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: android.view.MenuItem): Boolean {
+        if (item.itemId == R.id.action_help) {
+            val intent = Intent(this, HelpSupportActivity::class.java)
+            startActivity(intent)
+            return true
+        }
+        return super.onOptionsItemSelected(item)
+    }
 }

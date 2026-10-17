@@ -32,6 +32,11 @@
         android:title="Track Parcel Live" />
 
     <item
+        android:id="@+id/nav_help"
+        android:icon="@android:drawable/ic_menu_help"
+        android:title="Help &amp; Documentation" />
+
+    <item
         android:id="@+id/nav_admin"
         android:icon="@android:drawable/ic_menu_manage"
         android:title="Admin Portal" />

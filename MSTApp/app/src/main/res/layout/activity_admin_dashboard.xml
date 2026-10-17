@@ -215,6 +215,38 @@
 
                 </LinearLayout>
 
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btnViewSupportTickets"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="4dp"
+                        android:layout_weight="1"
+                        android:text="📩 Support Tickets"
+                        android:textColor="#2C1810"
+                        android:textSize="11sp"
+                        app:strokeColor="#512DA8" />
+
+                    <Button
+                        android:id="@+id/btnStakeholderDocs"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_weight="1"
+                        android:text="📖 Stakeholder Docs"
+                        android:textColor="#2C1810"
+                        android:textSize="11sp"
+                        app:strokeColor="#512DA8" />
+
+                </LinearLayout>
+
                 <Button
                     android:id="@+id/btnAddNewProduct"
                     android:layout_width="match_parent"
