@@ -10,6 +10,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.mstperfumes.adapters.AdminProductAdapter
+import com.example.mstperfumes.data.DatabaseRepository
 import com.example.mstperfumes.data.ProductRepository
 import com.example.mstperfumes.databinding.ActivityAdminDashboardBinding
 import com.example.mstperfumes.models.Product
@@ -45,6 +46,14 @@ class AdminDashboardActivity : AppCompatActivity() {
         binding.btnViewWishlists.setOnClickListener {
             showAllWishlistsDialog()
         }
+
+        binding.btnViewSupportTickets.setOnClickListener {
+            showSupportTicketsDialog()
+        }
+
+        binding.btnStakeholderDocs.setOnClickListener {
+            showStakeholderDocsDialog()
+        }
     }
 
     override fun onResume() {
@@ -57,11 +66,13 @@ class AdminDashboardActivity : AppCompatActivity() {
         binding.adminToolbar.title = "Admin Dashboard - MST Perfumes"
         binding.adminToolbar.inflateMenu(R.menu.navigation_menu)
         
-        // Clear old menu items and add custom Admin actions
         binding.adminToolbar.menu.clear()
         val logoutMenuItem = binding.adminToolbar.menu.add("Logout")
         logoutMenuItem.setShowAsAction(android.view.MenuItem.SHOW_AS_ACTION_ALWAYS)
         
+        val helpDocsMenuItem = binding.adminToolbar.menu.add("Help & Support")
+        helpDocsMenuItem.setShowAsAction(android.view.MenuItem.SHOW_AS_ACTION_NEVER)
+
         val viewStoreMenuItem = binding.adminToolbar.menu.add("View Store")
         viewStoreMenuItem.setShowAsAction(android.view.MenuItem.SHOW_AS_ACTION_NEVER)
 
@@ -74,6 +85,11 @@ class AdminDashboardActivity : AppCompatActivity() {
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                     startActivity(intent)
                     finish()
+                    true
+                }
+                "Help & Support" -> {
+                    val intent = Intent(this, HelpSupportActivity::class.java)
+                    startActivity(intent)
                     true
                 }
                 "View Store" -> {
@@ -97,7 +113,7 @@ class AdminDashboardActivity : AppCompatActivity() {
     }
 
     private fun updateDashboardStats() {
-        val dbRepo = com.example.mstperfumes.data.DatabaseRepository(this)
+        val dbRepo = DatabaseRepository(this)
         val allProducts = ProductRepository.getAllProducts()
         val menCount = ProductRepository.getMenProducts().size
         val womenCount = ProductRepository.getWomenProducts().size
@@ -112,7 +128,7 @@ class AdminDashboardActivity : AppCompatActivity() {
     }
 
     private fun showRegisteredUsersDialog() {
-        val dbRepo = com.example.mstperfumes.data.DatabaseRepository(this)
+        val dbRepo = DatabaseRepository(this)
         val users = dbRepo.getAllUsers()
         val userDetailsArray = users.map { "👤 ${it.name}\n✉️ ${it.email}\n📅 Registered: ${it.registeredDate}" }.toTypedArray()
 
@@ -124,7 +140,7 @@ class AdminDashboardActivity : AppCompatActivity() {
     }
 
     private fun showAllOrdersDialog() {
-        val dbRepo = com.example.mstperfumes.data.DatabaseRepository(this)
+        val dbRepo = DatabaseRepository(this)
         val orders = dbRepo.getAllOrders()
         val orderStrings = orders.map { 
             "📦 Code: ${it.orderCode}\n👤 Customer: ${it.userName}\n🛒 Items: ${it.itemsSummary}\n💰 Total: R${it.totalAmount}\n📍 Address: ${it.shippingAddress}\n⚡ Status: ${it.status}" 
@@ -141,7 +157,7 @@ class AdminDashboardActivity : AppCompatActivity() {
     }
 
     private fun showChangeOrderStatusDialog(order: com.example.mstperfumes.models.UserOrder) {
-        val dbRepo = com.example.mstperfumes.data.DatabaseRepository(this)
+        val dbRepo = DatabaseRepository(this)
         val statuses = arrayOf("Order Placed", "Preparing", "In Transit", "Delivered")
 
         AlertDialog.Builder(this)
@@ -156,7 +172,7 @@ class AdminDashboardActivity : AppCompatActivity() {
     }
 
     private fun showAllWishlistsDialog() {
-        val dbRepo = com.example.mstperfumes.data.DatabaseRepository(this)
+        val dbRepo = DatabaseRepository(this)
         val wishlists = dbRepo.getAllWishlists()
         val wishlistStrings = wishlists.map { 
             "❤️ Product: ${it.productName}\n👤 User ID: ${it.userId}\n💰 Price: R${it.retailPrice} / Bulk R${it.bulkPrice}\n🌸 Notes: ${it.scentProfile}" 
@@ -166,6 +182,78 @@ class AdminDashboardActivity : AppCompatActivity() {
             .setTitle("User Wishlist Activity (${wishlists.size})")
             .setItems(wishlistStrings, null)
             .setPositiveButton("Close") { dialog, _ -> dialog.dismiss() }
+            .show()
+    }
+
+    private fun showSupportTicketsDialog() {
+        val dbRepo = DatabaseRepository(this)
+        val tickets = dbRepo.getAllSupportTickets()
+        if (tickets.isEmpty()) {
+            Toast.makeText(this, "No support inquiries submitted yet", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val ticketStrings = tickets.map {
+            "📩 [${it.status}] ${it.category}\n👤 ${it.userName} (${it.userEmail})\n📌 ${it.subject}\n💬 ${it.message}"
+        }.toTypedArray()
+
+        AlertDialog.Builder(this)
+            .setTitle("Support Inquiries (${tickets.size})")
+            .setItems(ticketStrings) { _, which ->
+                val selectedTicket = tickets[which]
+                showUpdateTicketStatusDialog(selectedTicket)
+            }
+            .setPositiveButton("Close") { dialog, _ -> dialog.dismiss() }
+            .show()
+    }
+
+    private fun showUpdateTicketStatusDialog(ticket: com.example.mstperfumes.models.SupportTicket) {
+        val dbRepo = DatabaseRepository(this)
+        val statuses = arrayOf("Pending", "In Progress", "Resolved")
+
+        AlertDialog.Builder(this)
+            .setTitle("Update Status for Ticket #${ticket.id}")
+            .setMessage("Subject: ${ticket.subject}\nUser: ${ticket.userName}")
+            .setItems(statuses) { _, which ->
+                val newStatus = statuses[which]
+                dbRepo.updateSupportTicketStatus(ticket.id, newStatus)
+                Toast.makeText(this, "Ticket #${ticket.id} status set to $newStatus", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
+            .show()
+    }
+
+    private fun showStakeholderDocsDialog() {
+        val docsText = """
+            📱 MST PERFUMES - SYSTEM ARCHITECTURE & STAKEHOLDER GUIDE
+
+            1. SOFTWARE BUSINESS OVERVIEW
+            MST Perfumes is an enterprise luxury fragrance application providing both retail e-commerce and bulk wholesale reseller distribution with tiered pricing and live parcel logistics.
+
+            2. EMBEDDED HELP & DOCUMENTATION
+            End-users and external stakeholders can access the embedded Help & Documentation Center from the Navigation Drawer, Top Toolbar ('?'), or Profile menu. Features include:
+            • Real-time FAQ & User Guide search
+            • Category-based filtering (Retail vs Bulk, Logistics, Wallet, Forum)
+            • Direct Hotline dialing & Email support intent
+            • Support ticket submission with cloud-sync fallback
+
+            3. DATABASE & FIREBASE CLOUD ARCHITECTURE
+            • Local-First SQLite Database ('DatabaseRepository') provides complete offline reliability.
+            • Firebase Cloud Synchronization ('FirebaseSupportSyncHelper') automatically pushes support inquiries and order updates to Firebase Firestore / Realtime DB when connected.
+            • Connecting Firebase: Simply place 'google-services.json' in the app/ directory and enable Firebase Console.
+
+            4. ADMIN & OPERATIONAL CONTROLS
+            Admins can manage product inventories, approve pricing, view user accounts, update parcel delivery statuses, and review/resolve customer support tickets.
+        """.trimIndent()
+
+        AlertDialog.Builder(this)
+            .setTitle("📖 System & Stakeholder Documentation")
+            .setMessage(docsText)
+            .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
+            .setNeutralButton("Open Full Help Hub") { _, _ ->
+                val intent = Intent(this, HelpSupportActivity::class.java)
+                startActivity(intent)
+            }
             .show()
     }
 

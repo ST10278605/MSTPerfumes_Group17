@@ -106,6 +106,10 @@ class ProfileFragment : Fragment() {
         binding.tabWishlist.setOnClickListener { showWishlistView() }
         binding.tabWallet.setOnClickListener { showWalletView() }
         binding.tabMessages.setOnClickListener { showMessagesView() }
+        binding.tabHelp.setOnClickListener {
+            val intent = Intent(requireContext(), com.example.mstperfumes.HelpSupportActivity::class.java)
+            startActivity(intent)
+        }
         binding.tabSettings.setOnClickListener { showSettingsView() }
         binding.tabLogout.setOnClickListener {
             UserRepository.clearActiveSession()

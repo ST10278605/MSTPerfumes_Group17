@@ -3,6 +3,7 @@ package com.example.mstperfumes.data
 import android.content.ContentValues
 import android.content.Context
 import com.example.mstperfumes.models.Product
+import com.example.mstperfumes.models.SupportTicket
 import com.example.mstperfumes.models.User
 import com.example.mstperfumes.models.UserMessage
 import com.example.mstperfumes.models.UserOrder
@@ -493,5 +494,84 @@ class DatabaseRepository(context: Context) {
         }
         cursor.close()
         return items
+    }
+
+    // ==================== SUPPORT TICKETS & INQUIRIES ====================
+
+    fun createSupportTicket(
+        name: String,
+        email: String,
+        category: String,
+        subject: String,
+        message: String
+    ): SupportTicket {
+        val db = dbHelper.writableDatabase
+        val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+        val currentDate = dateFormat.format(Date())
+
+        val values = ContentValues().apply {
+            put(DatabaseHelper.COL_CONTACT_NAME, name)
+            put(DatabaseHelper.COL_CONTACT_EMAIL, email)
+            put(DatabaseHelper.COL_CONTACT_CATEGORY, category)
+            put(DatabaseHelper.COL_CONTACT_SUBJECT, subject)
+            put(DatabaseHelper.COL_CONTACT_MESSAGE, message)
+            put(DatabaseHelper.COL_CONTACT_STATUS, "Pending")
+            put(DatabaseHelper.COL_CONTACT_DATE, currentDate)
+        }
+
+        val newId = db.insert(DatabaseHelper.TABLE_CONTACT, null, values)
+
+        return SupportTicket(
+            id = newId.toInt(),
+            userName = name,
+            userEmail = email,
+            category = category,
+            subject = subject,
+            message = message,
+            status = "Pending",
+            dateSubmitted = currentDate
+        )
+    }
+
+    fun getAllSupportTickets(): List<SupportTicket> {
+        val tickets = mutableListOf<SupportTicket>()
+        val db = dbHelper.readableDatabase
+        val cursor = db.query(
+            DatabaseHelper.TABLE_CONTACT,
+            null, null, null, null, null,
+            "${DatabaseHelper.COL_CONTACT_ID} DESC"
+        )
+
+        if (cursor.moveToFirst()) {
+            do {
+                tickets.add(
+                    SupportTicket(
+                        id = cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.COL_CONTACT_ID)),
+                        userName = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COL_CONTACT_NAME)),
+                        userEmail = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COL_CONTACT_EMAIL)),
+                        category = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COL_CONTACT_CATEGORY)),
+                        subject = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COL_CONTACT_SUBJECT)),
+                        message = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COL_CONTACT_MESSAGE)),
+                        status = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COL_CONTACT_STATUS)),
+                        dateSubmitted = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COL_CONTACT_DATE))
+                    )
+                )
+            } while (cursor.moveToNext())
+        }
+        cursor.close()
+        return tickets
+    }
+
+    fun updateSupportTicketStatus(ticketId: Int, newStatus: String): Boolean {
+        val db = dbHelper.writableDatabase
+        val values = ContentValues().apply {
+            put(DatabaseHelper.COL_CONTACT_STATUS, newStatus)
+        }
+        return db.update(
+            DatabaseHelper.TABLE_CONTACT,
+            values,
+            "${DatabaseHelper.COL_CONTACT_ID} = ?",
+            arrayOf(ticketId.toString())
+        ) > 0
     }
 }
