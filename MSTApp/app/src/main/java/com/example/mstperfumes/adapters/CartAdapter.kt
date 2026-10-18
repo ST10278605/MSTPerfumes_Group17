@@ -40,8 +40,16 @@ class CartAdapter(
                 tvCartProductPrice.text = currencyFormat.format(totalPrice)
                 tvQuantity.text = cartItem.quantity.toString()
 
-                if (product.imageResId != 0) {
-                    ivCartProductImage.setImageResource(product.imageResId)
+                if (!product.imageUri.isNullOrEmpty()) {
+                    com.bumptech.glide.Glide.with(binding.root.context)
+                        .load(product.imageUri)
+                        .placeholder(if (product.imageResId != 0) product.imageResId else android.R.drawable.ic_menu_gallery)
+                        .error(if (product.imageResId != 0) product.imageResId else android.R.drawable.ic_menu_gallery)
+                        .into(ivCartProductImage)
+                } else if (product.imageResId != 0) {
+                    com.bumptech.glide.Glide.with(binding.root.context)
+                        .load(product.imageResId)
+                        .into(ivCartProductImage)
                 } else {
                     ivCartProductImage.setImageResource(android.R.drawable.ic_menu_gallery)
                 }

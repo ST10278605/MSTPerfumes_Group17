@@ -7,4 +7,14 @@
     <color name="purple_700">#FF3700B3</color>
     <color name="teal_200">#FF03DAC5</color>
     <color name="teal_700">#FF018786</color>
+
+    <!-- Custom Luxury Palette -->
+    <color name="smoke_white">#F5F5F5</color>
+    <color name="golden_sand">#E5C158</color>
+    <color name="deep_burgundy">#4A0E17</color>
+
+    <!-- Theme Color Mapping -->
+    <color name="colorPrimary">@color/deep_burgundy</color>
+    <color name="colorSecondary">@color/golden_sand</color>
+    <color name="colorBackground">@color/smoke_white</color>
 </resources>

@@ -85,7 +85,8 @@ class ProfileFragment : Fragment() {
                 bulkPrice = wishItem.bulkPrice,
                 scentProfile = wishItem.scentProfile,
                 imageResId = wishItem.imageResId,
-                category = wishItem.category
+                category = wishItem.category,
+                imageUri = wishItem.imageUri
             ))
             refreshData()
             Toast.makeText(requireContext(), "${wishItem.productName} removed from wishlist", Toast.LENGTH_SHORT).show()

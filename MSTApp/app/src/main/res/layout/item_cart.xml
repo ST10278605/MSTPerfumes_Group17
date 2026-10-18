@@ -32,7 +32,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Product Name"
-                android:textColor="#2C1810"
+                android:textColor="@color/deep_burgundy"
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
@@ -41,7 +41,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="R0"
-                android:textColor="#D4AF37"
+                android:textColor="@color/golden_sand"
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
@@ -49,43 +49,68 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
+                android:gravity="center_vertical"
                 android:orientation="horizontal">
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnDecrease"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:backgroundTint="#2C1810"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:backgroundTint="@color/golden_sand"
+                    android:padding="0dp"
                     android:text="-"
-                    android:textSize="16sp" />
+                    android:textColor="@color/deep_burgundy"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:insetLeft="0dp"
+                    android:insetRight="0dp"
+                    app:cornerRadius="18dp" />
 
                 <TextView
                     android:id="@+id/tvQuantity"
-                    android:layout_width="40dp"
-                    android:layout_height="32dp"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
                     android:gravity="center"
                     android:text="1"
-                    android:textColor="#2C1810"
-                    android:textSize="14sp" />
+                    android:textColor="@color/deep_burgundy"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnIncrease"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:backgroundTint="#2C1810"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:backgroundTint="@color/golden_sand"
+                    android:padding="0dp"
                     android:text="+"
-                    android:textSize="16sp" />
+                    android:textColor="@color/deep_burgundy"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:insetLeft="0dp"
+                    android:insetRight="0dp"
+                    app:cornerRadius="18dp" />
 
             </LinearLayout>
         </LinearLayout>
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnRemove"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="36dp"
+            android:layout_gravity="center_vertical"
             android:backgroundTint="#D32F2F"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="0dp"
             android:text="Remove"
-            android:textSize="12sp" />
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            app:cornerRadius="8dp" />
 
     </LinearLayout>
 </androidx.cardview.widget.CardView>
