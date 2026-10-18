@@ -13,7 +13,8 @@ import java.util.Locale
 
 class DatabaseRepository(context: Context) {
 
-    private val dbHelper = DatabaseHelper(context.applicationContext)
+    private val appContext = context.applicationContext
+    private val dbHelper by lazy { DatabaseHelper(appContext) }
 
     // ==================== USER AUTH & ACCOUNTS ====================
 

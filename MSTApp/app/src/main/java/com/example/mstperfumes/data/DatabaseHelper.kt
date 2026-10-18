@@ -235,7 +235,13 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         db.execSQL(createTblCommunication)
         db.execSQL(createTblWishlist)
 
-        seedInitialData(db)
+        db.beginTransaction()
+        try {
+            seedInitialData(db)
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
+        }
     }
 
     private fun seedInitialData(db: SQLiteDatabase) {
