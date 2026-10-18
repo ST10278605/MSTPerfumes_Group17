@@ -45,8 +45,16 @@ class AdminProductAdapter(
                 tvAdminRetailPrice.text = "Retail: ${currencyFormat.format(product.retailPrice)}"
                 tvAdminBulkPrice.text = "Bulk: ${currencyFormat.format(product.bulkPrice)}"
 
-                if (product.imageResId != 0) {
-                    ivAdminProductImage.setImageResource(product.imageResId)
+                if (!product.imageUri.isNullOrEmpty()) {
+                    com.bumptech.glide.Glide.with(binding.root.context)
+                        .load(product.imageUri)
+                        .placeholder(if (product.imageResId != 0) product.imageResId else android.R.drawable.ic_menu_gallery)
+                        .error(if (product.imageResId != 0) product.imageResId else android.R.drawable.ic_menu_gallery)
+                        .into(ivAdminProductImage)
+                } else if (product.imageResId != 0) {
+                    com.bumptech.glide.Glide.with(binding.root.context)
+                        .load(product.imageResId)
+                        .into(ivAdminProductImage)
                 } else {
                     ivAdminProductImage.setImageResource(android.R.drawable.ic_menu_gallery)
                 }

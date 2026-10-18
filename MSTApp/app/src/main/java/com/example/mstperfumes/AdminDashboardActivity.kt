@@ -20,6 +20,34 @@ class AdminDashboardActivity : AppCompatActivity() {
     private lateinit var binding: ActivityAdminDashboardBinding
     private lateinit var adapter: AdminProductAdapter
 
+    private var onImagePickedCallback: ((android.net.Uri) -> Unit)? = null
+
+    private val pickImageLauncher = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.GetContent()
+    ) { uri: android.net.Uri? ->
+        uri?.let {
+            val savedUri = saveImageToInternalStorage(it)
+            onImagePickedCallback?.invoke(savedUri)
+        }
+    }
+
+    private fun saveImageToInternalStorage(sourceUri: android.net.Uri): android.net.Uri {
+        return try {
+            val inputStream = contentResolver.openInputStream(sourceUri)
+            val file = java.io.File(filesDir, "product_${System.currentTimeMillis()}.jpg")
+            val outputStream = java.io.FileOutputStream(file)
+            inputStream?.use { input ->
+                outputStream.use { output ->
+                    input.copyTo(output)
+                }
+            }
+            android.net.Uri.fromFile(file)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            sourceUri
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (!AdminGuard.verifyAdminAccess(this)) return
@@ -261,9 +289,41 @@ class AdminDashboardActivity : AppCompatActivity() {
         val builder = AlertDialog.Builder(this)
         builder.setTitle("Add New Product")
 
+        val scrollView = android.widget.ScrollView(this)
         val layout = android.widget.LinearLayout(this).apply {
             orientation = android.widget.LinearLayout.VERTICAL
             setPadding(50, 20, 50, 10)
+        }
+
+        var selectedImageUriString: String? = null
+
+        val ivPreview = android.widget.ImageView(this).apply {
+            layoutParams = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                300
+            ).apply { bottomMargin = 16 }
+            scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
+            setImageResource(android.R.drawable.ic_menu_gallery)
+            setBackgroundColor(android.graphics.Color.parseColor("#F5F5F5"))
+        }
+
+        val btnSelectImage = com.google.android.material.button.MaterialButton(this).apply {
+            text = "📷 Upload Product Image"
+            setBackgroundColor(android.graphics.Color.parseColor("#2C1810"))
+            setTextColor(android.graphics.Color.WHITE)
+            layoutParams = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { bottomMargin = 20 }
+            setOnClickListener {
+                onImagePickedCallback = { uri ->
+                    selectedImageUriString = uri.toString()
+                    com.bumptech.glide.Glide.with(this@AdminDashboardActivity)
+                        .load(uri)
+                        .into(ivPreview)
+                }
+                pickImageLauncher.launch("image/*")
+            }
         }
 
         val etName = EditText(this).apply { hint = "Product Name (e.g. Amber Oud)" }
@@ -283,6 +343,8 @@ class AdminDashboardActivity : AppCompatActivity() {
         val categoryAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, categories)
         spCategory.adapter = categoryAdapter
 
+        layout.addView(ivPreview)
+        layout.addView(btnSelectImage)
         layout.addView(etName)
         layout.addView(etSize)
         layout.addView(etRetailPrice)
@@ -290,7 +352,8 @@ class AdminDashboardActivity : AppCompatActivity() {
         layout.addView(etScentProfile)
         layout.addView(spCategory)
 
-        builder.setView(layout)
+        scrollView.addView(layout)
+        builder.setView(scrollView)
 
         builder.setPositiveButton("Add") { dialog, _ ->
             val name = etName.text.toString().trim()
@@ -307,7 +370,8 @@ class AdminDashboardActivity : AppCompatActivity() {
                     retailPrice = retailPrice,
                     bulkPrice = bulkPrice,
                     scentProfile = scentProfile,
-                    category = category
+                    category = category,
+                    imageUri = selectedImageUriString
                 )
                 updateDashboardStats()
                 Toast.makeText(this, "Product added successfully!", Toast.LENGTH_SHORT).show()
@@ -325,9 +389,54 @@ class AdminDashboardActivity : AppCompatActivity() {
         val builder = AlertDialog.Builder(this)
         builder.setTitle("Edit Product")
 
+        val scrollView = android.widget.ScrollView(this)
         val layout = android.widget.LinearLayout(this).apply {
             orientation = android.widget.LinearLayout.VERTICAL
             setPadding(50, 20, 50, 10)
+        }
+
+        var selectedImageUriString: String? = product.imageUri
+
+        val ivPreview = android.widget.ImageView(this).apply {
+            layoutParams = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                300
+            ).apply { bottomMargin = 16 }
+            scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
+            setBackgroundColor(android.graphics.Color.parseColor("#F5F5F5"))
+
+            if (!product.imageUri.isNullOrEmpty()) {
+                com.bumptech.glide.Glide.with(this@AdminDashboardActivity)
+                    .load(product.imageUri)
+                    .placeholder(if (product.imageResId != 0) product.imageResId else android.R.drawable.ic_menu_gallery)
+                    .error(if (product.imageResId != 0) product.imageResId else android.R.drawable.ic_menu_gallery)
+                    .into(this)
+            } else if (product.imageResId != 0) {
+                com.bumptech.glide.Glide.with(this@AdminDashboardActivity)
+                    .load(product.imageResId)
+                    .into(this)
+            } else {
+                setImageResource(android.R.drawable.ic_menu_gallery)
+            }
+        }
+
+        val btnSelectImage = com.google.android.material.button.MaterialButton(this).apply {
+            text = "📷 Change Product Image"
+            setBackgroundColor(android.graphics.Color.parseColor("#2C1810"))
+            setTextColor(android.graphics.Color.WHITE)
+            layoutParams = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { bottomMargin = 20 }
+            setOnClickListener {
+                onImagePickedCallback = { uri ->
+                    selectedImageUriString = uri.toString()
+                    com.bumptech.glide.Glide.with(this@AdminDashboardActivity)
+                        .load(uri)
+                        .into(ivPreview)
+                }
+                pickImageLauncher.launch("image/*")
+            }
         }
 
         val etName = EditText(this).apply { 
@@ -359,6 +468,8 @@ class AdminDashboardActivity : AppCompatActivity() {
         spCategory.adapter = categoryAdapter
         spCategory.setSelection(if (product.category.equals("women", ignoreCase = true)) 1 else 0)
 
+        layout.addView(ivPreview)
+        layout.addView(btnSelectImage)
         layout.addView(etName)
         layout.addView(etSize)
         layout.addView(etRetailPrice)
@@ -366,7 +477,8 @@ class AdminDashboardActivity : AppCompatActivity() {
         layout.addView(etScentProfile)
         layout.addView(spCategory)
 
-        builder.setView(layout)
+        scrollView.addView(layout)
+        builder.setView(scrollView)
 
         builder.setPositiveButton("Save Changes") { dialog, _ ->
             val name = etName.text.toString().trim()
@@ -384,7 +496,8 @@ class AdminDashboardActivity : AppCompatActivity() {
                     retailPrice = retailPrice,
                     bulkPrice = bulkPrice,
                     scentProfile = scentProfile,
-                    category = category
+                    category = category,
+                    imageUri = selectedImageUriString
                 )
                 updateDashboardStats()
                 Toast.makeText(this, "Product updated successfully!", Toast.LENGTH_SHORT).show()

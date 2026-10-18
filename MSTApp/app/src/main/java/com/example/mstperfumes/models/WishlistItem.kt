@@ -10,5 +10,6 @@ data class WishlistItem(
     val scentProfile: String,
     val category: String,
     val imageResId: Int,
-    val addedDate: String
+    val addedDate: String,
+    val imageUri: String? = null
 )
