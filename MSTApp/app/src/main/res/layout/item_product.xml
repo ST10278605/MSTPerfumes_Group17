@@ -47,7 +47,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:text="Product Name"
-            android:textColor="#2C1810"
+            android:textColor="@color/deep_burgundy"
             android:textSize="16sp"
             android:textStyle="bold"
             android:maxLines="2"
@@ -69,7 +69,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Bulk Price: R0"
-            android:textColor="#D4AF37"
+            android:textColor="@color/golden_sand"
             android:textSize="16sp"
             android:textStyle="bold" />
 
@@ -93,7 +93,7 @@
             android:layout_width="match_parent"
             android:layout_height="40dp"
             android:layout_marginTop="8dp"
-            android:backgroundTint="#2C1810"
+            android:backgroundTint="@color/deep_burgundy"
             android:text="Add to Cart"
             android:textColor="@android:color/white"
             android:textSize="13sp" />
