@@ -6,6 +6,57 @@
     android:orientation="vertical"
     android:background="@android:color/transparent">
 
+    <!-- Perfume Search Bar Card -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="6dp"
+        app:cardBackgroundColor="#FFFFFF">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="16dp">
+
+            <ImageView
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:contentDescription="Search Icon"
+                android:src="@android:drawable/ic_menu_search"
+                app:tint="@color/deep_burgundy" />
+
+            <EditText
+                android:id="@+id/etSearchPerfumes"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_marginStart="10dp"
+                android:background="@null"
+                android:hint="Search perfumes by name, scent profile..."
+                android:imeOptions="actionSearch"
+                android:inputType="text"
+                android:maxLines="1"
+                android:textColor="@color/deep_burgundy"
+                android:textColorHint="#888888"
+                android:textSize="14sp" />
+
+            <ImageButton
+                android:id="@+id/btnClearSearch"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Clear Search"
+                android:src="@android:drawable/ic_menu_close_clear_cancel"
+                android:visibility="gone"
+                app:tint="#888888" />
+
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -18,12 +69,13 @@
 
             <!-- Hero Banner -->
             <androidx.cardview.widget.CardView
+                android:id="@+id/cardHeroBanner"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="4dp"
-                app:cardBackgroundColor="#CC2C1810">
+                app:cardBackgroundColor="#CC4A0E17">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -54,7 +106,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:text="📦 Bulk Pricing starts at 10+ units!"
-                        android:textColor="#D4AF37"
+                        android:textColor="@color/golden_sand"
                         android:textSize="14sp"
                         android:textStyle="bold"
                         android:gravity="center" />
@@ -62,8 +114,22 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
+            <!-- No Results Message -->
+            <TextView
+                android:id="@+id/tvNoResults"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="24dp"
+                android:gravity="center"
+                android:text="No perfumes match your search"
+                android:textColor="@android:color/white"
+                android:textSize="16sp"
+                android:textStyle="italic"
+                android:visibility="gone" />
+
             <!-- Men's Section -->
             <TextView
+                android:id="@+id/tvMensHeader"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
@@ -83,6 +149,7 @@
 
             <!-- Women's Section -->
             <TextView
+                android:id="@+id/tvWomensHeader"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
