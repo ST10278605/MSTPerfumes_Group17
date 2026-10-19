@@ -5,10 +5,25 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mstperfumes.databinding.ItemTestimonialBinding
 
-data class Testimonial(val name: String, val text: String)
+data class Testimonial(
+    val headline: String,
+    val text: String,
+    val authorName: String,
+    val location: String,
+    val timeAgo: String,
+    val productName: String,
+    val productImageResId: Int = com.example.mstperfumes.R.drawable.elegant_night
+)
 
-class TestimonialAdapter(private val testimonials: List<Testimonial>) :
-    RecyclerView.Adapter<TestimonialAdapter.TestimonialViewHolder>() {
+class TestimonialAdapter(
+    private var testimonials: List<Testimonial>,
+    private val onViewProduct: ((Testimonial) -> Unit)? = null
+) : RecyclerView.Adapter<TestimonialAdapter.TestimonialViewHolder>() {
+
+    fun updateTestimonials(newList: List<Testimonial>) {
+        this.testimonials = newList
+        notifyDataSetChanged()
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TestimonialViewHolder {
         val binding = ItemTestimonialBinding.inflate(
@@ -28,25 +43,22 @@ class TestimonialAdapter(private val testimonials: List<Testimonial>) :
 
         fun bind(testimonial: Testimonial) {
             binding.apply {
-                tvTestimonialName.text = testimonial.name
+                tvTestimonialHeadline.text = testimonial.headline
                 tvTestimonialText.text = testimonial.text
+                tvTestimonialName.text = testimonial.authorName
+                tvTestimonialLocation.text = testimonial.location
+                tvTestimonialTime.text = testimonial.timeAgo
+                tvProductName.text = testimonial.productName
 
-                // Make text fully visible and prevent cutting
-                tvTestimonialText.isSingleLine = false
-                tvTestimonialText.maxLines = 8
-                tvTestimonialText.isHorizontalScrollBarEnabled = false
-
-                // Add customer title based on name
-                val title = when {
-                    testimonial.name.contains("Thabo") -> "Student Entrepreneur"
-                    testimonial.name.contains("Lerato") -> "Small Business Owner"
-                    testimonial.name.contains("Sipho") -> "University Student"
-                    testimonial.name.contains("Zinhle") -> "Beauty Influencer"
-                    testimonial.name.contains("Michael") -> "Professional Reseller"
-                    testimonial.name.contains("Precious") -> "Fashion Student"
-                    else -> "Verified Buyer"
+                if (testimonial.productImageResId != 0) {
+                    ivProductThumb.setImageResource(testimonial.productImageResId)
+                } else {
+                    ivProductThumb.setImageResource(android.R.drawable.ic_menu_gallery)
                 }
-                tvCustomerTitle.text = title
+
+                layoutViewProduct.setOnClickListener {
+                    onViewProduct?.invoke(testimonial)
+                }
             }
         }
     }

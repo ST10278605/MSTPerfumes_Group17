@@ -9,11 +9,16 @@ import java.text.NumberFormat
 import java.util.Locale
 
 class ProductAdapter(
-    private val products: List<Product>,
+    private var products: List<Product>,
     private val onAddToCart: (Product) -> Unit
 ) : RecyclerView.Adapter<ProductAdapter.ProductViewHolder>() {
 
     private val currencyFormat = NumberFormat.getCurrencyInstance(Locale("en", "ZA"))
+
+    fun updateProducts(newProducts: List<Product>) {
+        this.products = newProducts
+        notifyDataSetChanged()
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProductViewHolder {
         val binding = ItemProductBinding.inflate(
@@ -43,8 +48,16 @@ class ProductAdapter(
                 tvBulkPrice.text = "Bulk: ${currencyFormat.format(product.bulkPrice)}"
                 tvScentProfile.text = product.scentProfile
 
-                if (product.imageResId != 0) {
-                    ivProductImage.setImageResource(product.imageResId)
+                if (!product.imageUri.isNullOrEmpty()) {
+                    com.bumptech.glide.Glide.with(context)
+                        .load(product.imageUri)
+                        .placeholder(if (product.imageResId != 0) product.imageResId else android.R.drawable.ic_menu_gallery)
+                        .error(if (product.imageResId != 0) product.imageResId else android.R.drawable.ic_menu_gallery)
+                        .into(ivProductImage)
+                } else if (product.imageResId != 0) {
+                    com.bumptech.glide.Glide.with(context)
+                        .load(product.imageResId)
+                        .into(ivProductImage)
                 } else {
                     ivProductImage.setImageResource(android.R.drawable.ic_menu_gallery)
                 }

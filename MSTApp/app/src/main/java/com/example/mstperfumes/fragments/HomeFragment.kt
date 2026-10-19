@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.mstperfumes.MainActivity
@@ -15,6 +16,9 @@ import com.example.mstperfumes.databinding.FragmentHomeBinding
 class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
+
+    private lateinit var testimonialAdapter: TestimonialAdapter
+    private val allTestimonials = mutableListOf<Testimonial>()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -46,35 +50,155 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupTestimonials() {
-        val testimonials = listOf(
-            Testimonial(
-                "Thabo M. - Student Entrepreneur",
-                "MST Perfumes changed my life! I started with just 10 bottles and now I'm making R3000 profit monthly. The bulk pricing makes it easy to start your own business. The support team is amazing and delivery is always on time!"
-            ),
-            Testimonial(
-                "Lerato S. - Small Business Owner",
-                "The quality of these perfumes is amazing for the wholesale price. My customers keep coming back for more. Best decision I made for my business! I've grown from selling to friends to running a full-time business."
-            ),
-            Testimonial(
-                "Sipho D. - University Student",
-                "As a student, finding affordable products to resell was hard. MST Perfumes gave me the opportunity to earn while studying. Highly recommended for any student looking to make extra income without affecting study time."
-            ),
-            Testimonial(
-                "Zinhle K. - Beauty Influencer",
-                "I've tried many perfume suppliers, but MST Perfumes offers the best value. The scents are long-lasting and my followers love them! My engagement increased by 200% after featuring these products."
-            ),
-            Testimonial(
-                "Michael N. - Professional Reseller",
-                "Profits are incredible with MST Perfumes. The wholesale pricing allows good margins, and customers appreciate the quality. I've expanded to selling at local markets and online. Growing my business every month!"
-            ),
-            Testimonial(
-                "Precious T. - Fashion Student",
-                "The knowledge hub helped me learn how to market perfumes effectively. Now I have a successful side business while studying fashion. The entrepreneurial resources are invaluable for beginners."
+        allTestimonials.clear()
+        allTestimonials.addAll(
+            listOf(
+                Testimonial(
+                    headline = "Great!",
+                    text = "Perfect ,sweets in a bottle,I get compliments everyday in the office",
+                    authorName = "Zandile L.",
+                    location = "SABIE, MP",
+                    timeAgo = "8h ago",
+                    productName = "Vanilla Royale",
+                    productImageResId = com.example.mstperfumes.R.drawable.vanilla_dream
+                ),
+                Testimonial(
+                    headline = "Wonderful!",
+                    text = "It's giving grown women vibe. Lasts long enough for me",
+                    authorName = "Kopano M.",
+                    location = "Swartruggens, North West",
+                    timeAgo = "19h ago",
+                    productName = "Pandora",
+                    productImageResId = com.example.mstperfumes.R.drawable.midnight_rose
+                ),
+                Testimonial(
+                    headline = "Phenomenal!",
+                    text = "It's scandalous indeed. The scent stays on all day long!",
+                    authorName = "Kopano M.",
+                    location = "Swartruggens, North West",
+                    timeAgo = "19h ago",
+                    productName = "Scandalous - A...",
+                    productImageResId = com.example.mstperfumes.R.drawable.citrus_bloom
+                ),
+                Testimonial(
+                    headline = "Spectacular!",
+                    text = "I work in child care and need to smell good all day. It exceeded my expectations!",
+                    authorName = "Loraine L.",
+                    location = "Emalahleni, GT",
+                    timeAgo = "19h ago",
+                    productName = "24 Karat",
+                    productImageResId = com.example.mstperfumes.R.drawable.bold_leather
+                ),
+                Testimonial(
+                    headline = "Life Changing!",
+                    text = "MST Perfumes changed my life! I started with just 10 bottles and now I'm making R3000 profit monthly.",
+                    authorName = "Thabo M.",
+                    location = "Sandton, GP",
+                    timeAgo = "1d ago",
+                    productName = "Elegant Night",
+                    productImageResId = com.example.mstperfumes.R.drawable.elegant_night
+                ),
+                Testimonial(
+                    headline = "Incredible Value!",
+                    text = "The quality of these perfumes is amazing for the wholesale price. My customers keep coming back.",
+                    authorName = "Lerato S.",
+                    location = "Rosebank, GP",
+                    timeAgo = "2d ago",
+                    productName = "Citrus Zest",
+                    productImageResId = com.example.mstperfumes.R.drawable.citrus_zest
+                )
             )
         )
 
+        testimonialAdapter = TestimonialAdapter(allTestimonials) { testimonial ->
+            val mainActivity = activity as? MainActivity
+            mainActivity?.let {
+                it.findViewById<androidx.viewpager2.widget.ViewPager2>(com.example.mstperfumes.R.id.viewPager)?.currentItem = 1
+            }
+        }
+
         binding.rvTestimonials.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
-        binding.rvTestimonials.adapter = TestimonialAdapter(testimonials)
+        binding.rvTestimonials.adapter = testimonialAdapter
+
+        // Search reviews filter
+        binding.etSearchReviews.addTextChangedListener { text ->
+            val query = text.toString().trim().lowercase()
+            if (query.isNotEmpty()) {
+                val filtered = allTestimonials.filter { t ->
+                    t.headline.lowercase().contains(query) ||
+                    t.text.lowercase().contains(query) ||
+                    t.authorName.lowercase().contains(query) ||
+                    t.location.lowercase().contains(query) ||
+                    t.productName.lowercase().contains(query)
+                }
+                testimonialAdapter.updateTestimonials(filtered)
+                binding.tvShowingReviewsCount.text = "Showing 1 - ${filtered.size} of ${allTestimonials.size} reviews."
+            } else {
+                testimonialAdapter.updateTestimonials(allTestimonials)
+                binding.tvShowingReviewsCount.text = "Showing 1 - ${allTestimonials.size} of 15,756 reviews."
+            }
+        }
+
+        // Write a review button
+        binding.btnWriteReview.setOnClickListener {
+            showWriteReviewDialog()
+        }
+    }
+
+    private fun showWriteReviewDialog() {
+        val builder = androidx.appcompat.app.AlertDialog.Builder(requireContext())
+        builder.setTitle("Write a Testimonial")
+
+        val layout = android.widget.LinearLayout(requireContext()).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(50, 20, 50, 10)
+        }
+
+        val etHeadline = android.widget.EditText(requireContext()).apply { hint = "Headline (e.g. Great Perfume!)" }
+        val etBody = android.widget.EditText(requireContext()).apply { hint = "Review description..." }
+        val etName = android.widget.EditText(requireContext()).apply { hint = "Your Name (e.g. Sipho M.)" }
+        val etLocation = android.widget.EditText(requireContext()).apply { hint = "Location (e.g. Sandton, GP)" }
+        val etProduct = android.widget.EditText(requireContext()).apply { hint = "Product Purchased (e.g. Elegant Night)" }
+
+        layout.addView(etHeadline)
+        layout.addView(etBody)
+        layout.addView(etName)
+        layout.addView(etLocation)
+        layout.addView(etProduct)
+
+        val scrollView = android.widget.ScrollView(requireContext())
+        scrollView.addView(layout)
+        builder.setView(scrollView)
+
+        builder.setPositiveButton("Submit Review") { dialog, _ ->
+            val headline = etHeadline.text.toString().trim()
+            val body = etBody.text.toString().trim()
+            val name = etName.text.toString().trim()
+            val loc = etLocation.text.toString().trim()
+            val prod = etProduct.text.toString().trim()
+
+            if (headline.isNotEmpty() && body.isNotEmpty() && name.isNotEmpty()) {
+                val newReview = Testimonial(
+                    headline = headline,
+                    text = body,
+                    authorName = name,
+                    location = if (loc.isNotEmpty()) loc else "South Africa",
+                    timeAgo = "Just now",
+                    productName = if (prod.isNotEmpty()) prod else "MST Perfumes",
+                    productImageResId = com.example.mstperfumes.R.drawable.elegant_night
+                )
+                allTestimonials.add(0, newReview)
+                testimonialAdapter.updateTestimonials(allTestimonials)
+                binding.tvShowingReviewsCount.text = "Showing 1 - ${allTestimonials.size} of 15,757 reviews."
+                Toast.makeText(requireContext(), "Thank you for submitting your review!", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(requireContext(), "Please fill in all review details", Toast.LENGTH_SHORT).show()
+            }
+            dialog.dismiss()
+        }
+
+        builder.setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
+        builder.show()
     }
 
     private fun setupContactForm() {

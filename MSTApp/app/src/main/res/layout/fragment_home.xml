@@ -18,7 +18,7 @@
             android:layout_margin="16dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="4dp"
-            app:cardBackgroundColor="#CC2C1810">
+            app:cardBackgroundColor="#CC4A0E17">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -51,7 +51,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:text="Login to be a Member"
-                    android:textColor="#D4AF37"
+                    android:textColor="@color/golden_sand"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:gravity="center" />
@@ -72,9 +72,9 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:layout_marginTop="16dp"
-                    android:backgroundTint="#D4AF37"
+                    android:backgroundTint="@color/golden_sand"
                     android:text="Join Us"
-                    android:textColor="#2C1810" />
+                    android:textColor="@color/deep_burgundy" />
 
             </LinearLayout>
         </androidx.cardview.widget.CardView>
@@ -88,7 +88,7 @@
             android:visibility="gone"
             app:cardCornerRadius="12dp"
             app:cardElevation="4dp"
-            app:cardBackgroundColor="#CC2C1810">
+            app:cardBackgroundColor="#CC4A0E17">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -100,7 +100,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="✨ Gold Member Benefits ✨"
-                    android:textColor="#D4AF37"
+                    android:textColor="@color/golden_sand"
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
@@ -116,22 +116,151 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Testimonials Section -->
+        <!-- Testimonials Section Header -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="8dp"
+            android:layout_marginTop="24dp"
             android:gravity="center"
             android:text="Testimonials"
             android:textColor="@android:color/white"
-            android:textSize="24sp"
+            android:textSize="28sp"
             android:textStyle="bold" />
 
+        <!-- Rating Summary & Write a Review Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="12dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <!-- 4.7 ★★★★★ (15,756 reviews) -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tvAverageRating"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="4.7 "
+                    android:textColor="@android:color/white"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="★★★★★ "
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp" />
+
+                <TextView
+                    android:id="@+id/tvReviewCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="(15,756 reviews)"
+                    android:textColor="#CCCCCC"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+            <!-- Write a review Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnWriteReview"
+                android:layout_width="wrap_content"
+                android:layout_height="38dp"
+                android:backgroundTint="@color/golden_sand"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="0dp"
+                android:text="Write a review"
+                android:textColor="@color/deep_burgundy"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                app:cornerRadius="19dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp" />
+
+        </LinearLayout>
+
+        <!-- Search Reviews Bar -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="12dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="#FFFFFF">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="42dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="14dp">
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:contentDescription="Search Icon"
+                    android:src="@android:drawable/ic_menu_search"
+                    app:tint="#666666" />
+
+                <EditText
+                    android:id="@+id/etSearchReviews"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="8dp"
+                    android:background="@null"
+                    android:hint="Search reviews..."
+                    android:inputType="text"
+                    android:maxLines="1"
+                    android:textColor="#2C1810"
+                    android:textColorHint="#888888"
+                    android:textSize="14sp" />
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Subheader Status Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="8dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvShowingReviewsCount"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Showing 1 - 6 of 15,756 reviews."
+                android:textColor="#CCCCCC"
+                android:textSize="12sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Sort By: Most Recent ▾"
+                android:textColor="@android:color/white"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Review Cards RecyclerView -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvTestimonials"
             android:layout_width="match_parent"
-            android:layout_height="200dp"
+            android:layout_height="wrap_content"
+            android:clipToPadding="false"
+            android:paddingHorizontal="12dp"
             android:orientation="horizontal"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 
@@ -200,8 +329,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:backgroundTint="#2C1810"
-                    android:text="Send Message" />
+                    android:backgroundTint="@color/deep_burgundy"
+                    android:text="Send Message"
+                    android:textColor="@android:color/white" />
 
             </LinearLayout>
         </androidx.cardview.widget.CardView>

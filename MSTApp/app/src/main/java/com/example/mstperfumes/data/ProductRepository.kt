@@ -36,7 +36,8 @@ object ProductRepository {
         bulkPrice: Double,
         scentProfile: String,
         category: String,
-        imageResId: Int = R.drawable.elegant_night
+        imageResId: Int = R.drawable.elegant_night,
+        imageUri: String? = null
     ): Product {
         val newProduct = Product(
             id = nextId++,
@@ -46,7 +47,8 @@ object ProductRepository {
             bulkPrice = bulkPrice,
             scentProfile = scentProfile,
             imageResId = imageResId,
-            category = category
+            category = category,
+            imageUri = imageUri
         )
         productsList.add(0, newProduct)
         return newProduct
@@ -59,7 +61,8 @@ object ProductRepository {
         retailPrice: Double,
         bulkPrice: Double,
         scentProfile: String,
-        category: String
+        category: String,
+        imageUri: String? = null
     ): Boolean {
         val index = productsList.indexOfFirst { it.id == id }
         if (index != -1) {
@@ -72,7 +75,8 @@ object ProductRepository {
                 bulkPrice = bulkPrice,
                 scentProfile = scentProfile,
                 imageResId = existing.imageResId,
-                category = category
+                category = category,
+                imageUri = imageUri ?: existing.imageUri
             )
             return true
         }

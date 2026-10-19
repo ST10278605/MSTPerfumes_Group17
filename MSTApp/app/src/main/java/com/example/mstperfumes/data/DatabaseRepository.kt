@@ -14,7 +14,8 @@ import java.util.Locale
 
 class DatabaseRepository(context: Context) {
 
-    private val dbHelper = DatabaseHelper(context.applicationContext)
+    private val appContext = context.applicationContext
+    private val dbHelper by lazy { DatabaseHelper(appContext) }
 
     // ==================== USER AUTH & ACCOUNTS ====================
 
@@ -450,6 +451,7 @@ class DatabaseRepository(context: Context) {
                 put(DatabaseHelper.COL_WISHLIST_SCENT, product.scentProfile)
                 put(DatabaseHelper.COL_WISHLIST_CATEGORY, product.category)
                 put(DatabaseHelper.COL_WISHLIST_IMAGE, product.imageResId)
+                put(DatabaseHelper.COL_WISHLIST_IMAGE_URI, product.imageUri)
                 put(DatabaseHelper.COL_WISHLIST_ADDED_DATE, currentDate)
             }
             db.insertWithOnConflict(
@@ -487,6 +489,7 @@ class DatabaseRepository(context: Context) {
         )
 
         if (cursor.moveToFirst()) {
+            val imgUriIdx = cursor.getColumnIndex(DatabaseHelper.COL_WISHLIST_IMAGE_URI)
             do {
                 items.add(
                     WishlistItem(
@@ -499,7 +502,8 @@ class DatabaseRepository(context: Context) {
                         scentProfile = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COL_WISHLIST_SCENT)),
                         category = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COL_WISHLIST_CATEGORY)),
                         imageResId = cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.COL_WISHLIST_IMAGE)),
-                        addedDate = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COL_WISHLIST_ADDED_DATE))
+                        addedDate = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COL_WISHLIST_ADDED_DATE)),
+                        imageUri = if (imgUriIdx != -1) cursor.getString(imgUriIdx) else null
                     )
                 )
             } while (cursor.moveToNext())
@@ -518,6 +522,7 @@ class DatabaseRepository(context: Context) {
         )
 
         if (cursor.moveToFirst()) {
+            val imgUriIdx = cursor.getColumnIndex(DatabaseHelper.COL_WISHLIST_IMAGE_URI)
             do {
                 items.add(
                     WishlistItem(
@@ -530,7 +535,8 @@ class DatabaseRepository(context: Context) {
                         scentProfile = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COL_WISHLIST_SCENT)),
                         category = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COL_WISHLIST_CATEGORY)),
                         imageResId = cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.COL_WISHLIST_IMAGE)),
-                        addedDate = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COL_WISHLIST_ADDED_DATE))
+                        addedDate = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COL_WISHLIST_ADDED_DATE)),
+                        imageUri = if (imgUriIdx != -1) cursor.getString(imgUriIdx) else null
                     )
                 )
             } while (cursor.moveToNext())

@@ -11,6 +11,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
     companion object {
         private const val DATABASE_NAME = "mst_perfumes_db.db"
         private const val DATABASE_VERSION = 3
+        private const val DATABASE_VERSION = 4
 
         // Password Hashing Helper Functions (MD5 & SHA-256 Encryption)
         fun md5(input: String): String {
@@ -54,6 +55,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         const val COL_PRODUCT_STOCK = "stock_quantity"
         const val COL_PRODUCT_APPROVAL = "approval_status" // Approved / Pending / Rejected
         const val COL_PRODUCT_IMAGE = "image_res_id"
+        const val COL_PRODUCT_IMAGE_URI = "image_uri"
 
         // tblAorder - Customer orders
         const val TABLE_AORDER = "tblAorder"
@@ -115,6 +117,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         const val COL_WISHLIST_SCENT = "scent_profile"
         const val COL_WISHLIST_CATEGORY = "category"
         const val COL_WISHLIST_IMAGE = "image_res_id"
+        const val COL_WISHLIST_IMAGE_URI = "image_uri"
         const val COL_WISHLIST_ADDED_DATE = "added_date"
     }
 
@@ -153,7 +156,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 $COL_PRODUCT_CATEGORY TEXT NOT NULL,
                 $COL_PRODUCT_STOCK INTEGER NOT NULL DEFAULT 50,
                 $COL_PRODUCT_APPROVAL TEXT NOT NULL DEFAULT 'Approved',
-                $COL_PRODUCT_IMAGE INTEGER NOT NULL
+                $COL_PRODUCT_IMAGE INTEGER NOT NULL,
+                $COL_PRODUCT_IMAGE_URI TEXT
             )
         """.trimIndent()
 
@@ -225,6 +229,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 $COL_WISHLIST_SCENT TEXT NOT NULL,
                 $COL_WISHLIST_CATEGORY TEXT NOT NULL,
                 $COL_WISHLIST_IMAGE INTEGER NOT NULL,
+                $COL_WISHLIST_IMAGE_URI TEXT,
                 $COL_WISHLIST_ADDED_DATE TEXT NOT NULL,
                 UNIQUE($COL_WISHLIST_USER_ID, $COL_WISHLIST_PRODUCT_ID)
             )
@@ -239,7 +244,13 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         db.execSQL(createTblCommunication)
         db.execSQL(createTblWishlist)
 
-        seedInitialData(db)
+        db.beginTransaction()
+        try {
+            seedInitialData(db)
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
+        }
     }
 
     private fun seedInitialData(db: SQLiteDatabase) {

@@ -42,8 +42,16 @@ class WishlistAdapter(
                 tvWishlistScent.text = item.scentProfile
                 tvWishlistPrice.text = "Retail: ${currencyFormat.format(item.retailPrice)} | Bulk: ${currencyFormat.format(item.bulkPrice)}"
 
-                if (item.imageResId != 0) {
-                    ivWishlistImage.setImageResource(item.imageResId)
+                if (!item.imageUri.isNullOrEmpty()) {
+                    com.bumptech.glide.Glide.with(binding.root.context)
+                        .load(item.imageUri)
+                        .placeholder(if (item.imageResId != 0) item.imageResId else android.R.drawable.ic_menu_gallery)
+                        .error(if (item.imageResId != 0) item.imageResId else android.R.drawable.ic_menu_gallery)
+                        .into(ivWishlistImage)
+                } else if (item.imageResId != 0) {
+                    com.bumptech.glide.Glide.with(binding.root.context)
+                        .load(item.imageResId)
+                        .into(ivWishlistImage)
                 } else {
                     ivWishlistImage.setImageResource(android.R.drawable.ic_menu_gallery)
                 }

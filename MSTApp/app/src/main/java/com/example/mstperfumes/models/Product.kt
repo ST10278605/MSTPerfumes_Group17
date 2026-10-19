@@ -8,5 +8,6 @@ data class Product(
     val bulkPrice: Double,
     val scentProfile: String,
     val imageResId: Int,
-    val category: String
+    val category: String,
+    val imageUri: String? = null
 )
