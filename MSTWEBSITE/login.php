@@ -340,6 +340,7 @@ if (
                     <input
                         type="email"
                         name="email"
+                        placeholder=" "
                         required
                         autocomplete="email"
                     >
@@ -354,6 +355,7 @@ if (
                     <input
                         type="password"
                         name="password"
+                        placeholder=" "
                         required
                         autocomplete="current-password"
                     >
