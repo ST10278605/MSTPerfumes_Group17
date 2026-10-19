@@ -18,6 +18,10 @@ jobs:
     name: Build & Run Automated Unit Tests
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: ./MSTApp
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -34,7 +38,7 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          key: ${{ runner.os }}-gradle-${{ hashFiles('MSTApp/**/*.gradle*', 'MSTApp/**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
 
@@ -52,11 +56,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: unit-test-results
-          path: app/build/reports/tests/testDebugUnitTest/
+          path: MSTApp/app/build/reports/tests/testDebugUnitTest/
 
       - name: Upload Debug APK
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: app-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: MSTApp/app/build/outputs/apk/debug/app-debug.apk
