@@ -95,6 +95,10 @@ The admin panel is available at:
 
 - `adminlogin.php`
 - `admin.php`
+## App Login details for Admin
+
+- Username: Admin001@gmail.com
+- Password: Admin001@
 
 Create an admin user in the `users` table with the `role` set to `admin` before trying to access the admin dashboard. The application checks for a user with the admin role before allowing access.
 
