@@ -193,7 +193,15 @@ class AdminDashboardActivity : AppCompatActivity() {
             .setItems(statuses) { _, which ->
                 val newStatus = statuses[which]
                 dbRepo.updateOrderStatus(order.orderCode, newStatus)
-                Toast.makeText(this, "Order ${order.orderCode} status updated to $newStatus", Toast.LENGTH_SHORT).show()
+
+                // Trigger FCM Push Notification for "In Transit" or "Delivered"
+                com.example.mstperfumes.data.FcmNotificationHelper.triggerOrderStatusNotification(
+                    context = this,
+                    orderCode = order.orderCode,
+                    newStatus = newStatus
+                )
+
+                Toast.makeText(this, "Order ${order.orderCode} updated to $newStatus (FCM Push Notification Sent)", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
             .show()
