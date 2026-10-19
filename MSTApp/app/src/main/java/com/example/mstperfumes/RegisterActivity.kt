@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.mstperfumes.data.DatabaseRepository
 import com.example.mstperfumes.databinding.ActivityRegisterBinding
 
 class RegisterActivity : AppCompatActivity() {
@@ -16,29 +17,36 @@ class RegisterActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         binding.btnRegister.setOnClickListener {
-            val name = binding.etName.text.toString()
-            val email = binding.etEmail.text.toString()
-            val password = binding.etPassword.text.toString()
-            val confirmPassword = binding.etConfirmPassword.text.toString()
+            val name = binding.etName.text.toString().trim()
+            val email = binding.etEmail.text.toString().trim()
+            val password = binding.etPassword.text.toString().trim()
+            val confirmPassword = binding.etConfirmPassword.text.toString().trim()
 
             if (name.isNotEmpty() && email.isNotEmpty() && password.isNotEmpty() && confirmPassword.isNotEmpty()) {
                 if (password == confirmPassword) {
-                    val dbRepo = com.example.mstperfumes.data.DatabaseRepository(this)
+                    val dbRepo = DatabaseRepository(this)
                     val newUser = dbRepo.registerUser(name, email, password)
-                    com.example.mstperfumes.data.UserRepository.setActiveUser(newUser)
 
                     val sharedPrefs = getSharedPreferences("UserPrefs", MODE_PRIVATE)
-                    with(sharedPrefs.edit()) {
+                    sharedPrefs.edit().apply {
                         putString("userName", newUser.name)
                         putString("fullName", newUser.name)
                         putString("userEmail", newUser.email)
                         apply()
                     }
 
-                    Toast.makeText(this, "Account Created Successfully! Welcome ${newUser.name}", Toast.LENGTH_SHORT).show()
-                    val intent = Intent(this, MainActivity::class.java)
+                    Toast.makeText(
+                        this,
+                        "Account Created Successfully! Please log in with your credentials.",
+                        Toast.LENGTH_LONG
+                    ).show()
+
+                    val intent = Intent(this, LoginActivity::class.java).apply {
+                        putExtra("registeredEmail", newUser.email)
+                        flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    }
                     startActivity(intent)
-                    finishAffinity() // Clear activity stack
+                    finish()
                 } else {
                     Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show()
                 }
@@ -48,7 +56,7 @@ class RegisterActivity : AppCompatActivity() {
         }
 
         binding.tvLogin.setOnClickListener {
-            finish() // Go back to LoginActivity
+            finish() // Return to LoginActivity
         }
     }
 }
