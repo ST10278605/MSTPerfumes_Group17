@@ -19,7 +19,54 @@ class DatabaseRepository(context: Context) {
 
     // ==================== USER AUTH & ACCOUNTS ====================
 
+    fun findUserByEmail(email: String): User? {
+        val db = dbHelper.readableDatabase
+        val cursor = db.query(
+            DatabaseHelper.TABLE_USER,
+            null,
+            "${DatabaseHelper.COL_USER_EMAIL} = ?",
+            arrayOf(email),
+            null, null, null
+        )
+
+        var user: User? = null
+        if (cursor.moveToFirst()) {
+            val id = cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.COL_USER_ID))
+            val name = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COL_USER_NAME))
+            val userEmail = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COL_USER_EMAIL))
+            val regDate = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COL_USER_REGISTERED_DATE))
+            user = User(id = id, name = name, email = userEmail, registeredDate = regDate)
+        }
+        cursor.close()
+        return user
+    }
+
+    fun getOrCreateUser(name: String, email: String, passwordRaw: String = "sso_pass"): User {
+        val existing = findUserByEmail(email)
+        if (existing != null) {
+            return existing
+        }
+        return registerUser(name, email, passwordRaw)
+    }
+
     fun registerUser(name: String, email: String, passwordRaw: String): User {
+        val existingUser = findUserByEmail(email)
+        if (existingUser != null) {
+            val db = dbHelper.writableDatabase
+            val passwordHash = DatabaseHelper.md5(passwordRaw)
+            val values = ContentValues().apply {
+                put(DatabaseHelper.COL_USER_NAME, name)
+                put(DatabaseHelper.COL_USER_PASSWORD_HASH, passwordHash)
+            }
+            db.update(
+                DatabaseHelper.TABLE_USER,
+                values,
+                "${DatabaseHelper.COL_USER_ID} = ?",
+                arrayOf(existingUser.id.toString())
+            )
+            return User(id = existingUser.id, name = name, email = email, registeredDate = existingUser.registeredDate)
+        }
+
         val db = dbHelper.writableDatabase
         val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
         val currentDate = dateFormat.format(Date())
@@ -33,10 +80,7 @@ class DatabaseRepository(context: Context) {
             put(DatabaseHelper.COL_USER_REGISTERED_DATE, currentDate)
         }
 
-        val newRowId = db.insertWithOnConflict(
-            DatabaseHelper.TABLE_USER, null, values,
-            android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
-        )
+        val newRowId = db.insert(DatabaseHelper.TABLE_USER, null, values)
 
         return User(id = newRowId.toInt(), name = name, email = email, registeredDate = currentDate)
     }

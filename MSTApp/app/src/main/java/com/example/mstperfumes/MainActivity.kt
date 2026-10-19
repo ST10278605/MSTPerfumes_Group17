@@ -65,12 +65,10 @@ class MainActivity : AppCompatActivity() {
                     startActivity(intent)
                 }
                 R.id.nav_logout -> {
-                    com.example.mstperfumes.data.UserRepository.clearActiveSession()
-                    val sharedPrefs = getSharedPreferences("UserPrefs", MODE_PRIVATE)
-                    sharedPrefs.edit().clear().apply()
-
+                    com.example.mstperfumes.data.SsoAuthManager.signOut(this)
                     Toast.makeText(this, "Logged out successfully", Toast.LENGTH_SHORT).show()
                     val intent = Intent(this, LoginActivity::class.java)
+                    intent.putExtra("force_relogin", true)
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                     startActivity(intent)
                     finish()

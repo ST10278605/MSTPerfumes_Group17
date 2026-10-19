@@ -136,7 +136,10 @@ class CheckoutFragment : Fragment() {
 
             // Record in Database
             val dbRepo = com.example.mstperfumes.data.DatabaseRepository(requireContext())
+            val sharedPrefs = requireContext().getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE)
+            val userEmail = sharedPrefs.getString("userEmail", null)
             val activeUser = com.example.mstperfumes.data.UserRepository.getActiveUser()
+                ?: (if (!userEmail.isNullOrEmpty()) dbRepo.findUserByEmail(userEmail) else null)
                 ?: dbRepo.getAllUsers().firstOrNull()
             val userId = activeUser?.id ?: 1
 

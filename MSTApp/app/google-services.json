@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "903484852623",
+    "project_id": "mstperfumes",
+    "storage_bucket": "mstperfumes.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:903484852623:android:f13d9faa835e017d24e3fa",
+        "android_client_info": {
+          "package_name": "com.example.mstperfumes"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "903484852623-dtgj2ob7r35n48d6s43fisd7hquftspb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.mstperfumes",
+            "certificate_hash": "836b3213cf46b32facf087ff1dae3bb3cbb1966b"
+          }
+        },
+        {
+          "client_id": "903484852623-sac3umuredd699fbk0bbn12hvkjn8qui.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAjh5nTdHyrBHxPxpNbDRhx7h7XIDfj-sM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "903484852623-sac3umuredd699fbk0bbn12hvkjn8qui.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
