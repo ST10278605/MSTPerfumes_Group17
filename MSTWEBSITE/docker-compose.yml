@@ -1,4 +1,8 @@
 services:
+  php:
+    image: php:8.2-fpm
+    environment:
+      - PHP_OPCACHE_VALIDATE_TIMESTAMPS=1
 
   web:
     build: .
@@ -16,7 +20,7 @@ services:
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: mst_website
+      MYSQL_DATABASE: mstwebsite
       MYSQL_USER: websiteuser
       MYSQL_PASSWORD: websitepassword
     ports:
@@ -37,4 +41,4 @@ services:
       - "8081:80"
 
 volumes:
-  mysql_data:
+  mysql_data: {}

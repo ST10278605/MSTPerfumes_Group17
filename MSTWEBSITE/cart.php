@@ -196,36 +196,77 @@ if (isset($_POST['checkout'])) {
 
 
 <body>
-<header class="header">
-    <nav class="navbar">
-        <div class="navbar-container">
-            <!-- Logo -->
-            <div class="navbar-brand">
-                <a href="index.php">
-                    <img src="pictures/logo.png" alt="MST Logo">
-                </a>
+
+<div class="top-bar">
+    <span><i class="fas fa-star" aria-hidden="true"></i> Discover your next signature scent</span>
+    <span>Free shipping on orders over R600</span>
+</div>
+
+<header class="site-header">
+    <div class="site-header__inner">
+        <a class="brand" href="index.php" aria-label="MST Perfumes home">
+            <img src="pictures/logo.png" alt="MST Perfumes logo">
+        </a>
+
+        <nav class="site-nav" aria-label="Main navigation">
+            <a href="index.php" class="<?= $filter === 'all' ? 'is-current' : '' ?>">Shop All</a>
+
+            <div class="nav-dropdown">
+                <button class="nav-dropdown__toggle" type="button" aria-expanded="false" aria-controls="shop-menu">
+                    Shop by scent <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                </button>
+                <ul class="nav-dropdown__menu" id="shop-menu">
+                    <li><a href="index.php?filter=male">Men's Perfume</a></li>
+                    <li><a href="index.php?filter=female">Women's Perfume</a></li>
+                    <li><a href="index.php?filter=unisex">Unisex Perfume</a></li>
+                </ul>
             </div>
 
-            <!-- Menu Items -->
-            <ul class="navbar-items">
-                <li><a href="index.php">HOME</a></li>
-                <li><a href="shopping.php">Products</a></li>
-                <li><a href="forum.php">Forum</a></li>
-                <li><a href="cart.php">View Cart (<?= $cartCount ?>)</a></li>
-            </ul>
+            <a href="forum.php#reviews">Reviews</a>
+            <a href="#contact-us">Contact Us</a>
+        </nav>
 
-            <!-- User Actions -->
-            <div class="navbar-user">
-                <?php if ($isLoggedIn): ?>
-                    <span>Welcome, <?= htmlspecialchars($username) ?></span>
-                    <a href="login.php?logout=1" class="btn-logout">Logout</a>
-                <?php else: ?>
-                    <a href="login.php" class="btn-login">Login</a>
-                <?php endif; ?>
+        <div class="account">
+            <?php if ($isLoggedIn): ?>
+                <span class="account__name">Hi, <?= e($userName) ?></span>
+            <?php else: ?>
+                <a class="btn btn-ghost" href="login.php">Login</a>
+            <?php endif; ?>
+
+            <div class="nav-dropdown account-dropdown">
+                <button class="nav-dropdown__toggle" type="button" aria-expanded="false" aria-controls="profile-menu">
+                    <i class="fas fa-user-circle" aria-hidden="true"></i> Profile
+                    <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                </button>
+                <ul class="nav-dropdown__menu" id="profile-menu">
+                    <?php if (!$isLoggedIn): ?>
+                        <li><a href="login.php">Login</a></li>
+                        <li><a href="register.php">Create an account</a></li>
+                    <?php elseif ($isAdmin): ?>
+                        <li><a href="profile.php">My Profile</a></li>
+                        <li><a href="admin_dashboard.php">Admin Dashboard</a></li>
+                        <li><a href="admin_products.php">Manage Products</a></li>
+                        <li><a href="admin_orders.php">Manage Orders</a></li>
+                        <li><a href="login.php?logout=1">Logout</a></li>
+                    <?php else: ?>
+                        <li><a href="profile.php">My Profile</a></li>
+                        <li><a href="my_orders.php">My Orders</a></li>
+                        <li><a href="forum.php#reviews">My Reviews</a></li>
+                        <li><a href="login.php?logout=1">Logout</a></li>
+                    <?php endif; ?>
+                </ul>
             </div>
+
+            <a href="cart.php" aria-label="Shopping cart, <?= $cartCount ?> items">
+                <i class="fas fa-shopping-bag" aria-hidden="true"></i>
+                <span class="cart-count"><?= $cartCount ?></span>
+            </a>
         </div>
-    </nav>
+    </div>
 </header>
+
+
+            
     <main>
         <section id="cart-hero" class="page-hero">
             <div class="container">
