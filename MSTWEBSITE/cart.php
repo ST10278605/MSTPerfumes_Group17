@@ -196,6 +196,7 @@ if (isset($_POST['checkout'])) {
 
 
 <body>
+
 <div class="top-bar">
     <span><i class="fas fa-star" aria-hidden="true"></i> Discover your next signature scent</span>
     <span>Free shipping on orders over R600</span>
@@ -264,6 +265,8 @@ if (isset($_POST['checkout'])) {
     </div>
 </header>
 
+
+            
     <main>
         <section id="cart-hero" class="page-hero">
             <div class="container">

@@ -44,6 +44,10 @@ class MainActivity : AppCompatActivity() {
         setupBottomNavigation()
         setupNavHeader()
 
+        // Initialize Firebase Cloud Messaging (FCM) Order Update Notifications
+        com.example.mstperfumes.data.FcmNotificationHelper.initNotificationChannel(this)
+        com.example.mstperfumes.data.FcmNotificationHelper.requestNotificationPermission(this)
+
         // Handle Navigation Drawer item clicks
         navView.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
