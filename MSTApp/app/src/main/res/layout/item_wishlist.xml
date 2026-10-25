@@ -18,11 +18,13 @@
 
         <ImageView
             android:id="@+id/ivWishlistImage"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:background="#F8F8F8"
             android:contentDescription="Wishlist Image"
-            android:scaleType="centerCrop"
-            android:src="@drawable/elegant_night" />
+            android:padding="4dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/aromatics_elixir_for_women" />
 
         <LinearLayout
             android:layout_width="0dp"

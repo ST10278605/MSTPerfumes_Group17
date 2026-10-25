@@ -1,102 +1,160 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="4dp"
-    app:cardUseCompatPadding="true">
+    android:layout_margin="6dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="2dp"
+    app:cardBackgroundColor="@android:color/white"
+    app:strokeWidth="0dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="12dp">
+        android:orientation="vertical">
 
-        <!-- Product Image Container with Wishlist Icon -->
+        <!-- Top Full-Bleed Product Image Container -->
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="160dp">
+            android:layout_height="150dp">
 
             <ImageView
                 android:id="@+id/ivProductImage"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="#F0F0F0"
                 android:scaleType="centerCrop"
-                android:src="@drawable/ic_launcher_foreground" />
+                android:src="@drawable/bleu_de_chanel_eau_de_parfum_for_men" />
 
+            <!-- New Pill Badge (Top Left) -->
+            <TextView
+                android:id="@+id/tvNewBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|start"
+                android:layout_margin="8dp"
+                android:background="@drawable/bg_badge_new"
+                android:text="New"
+                android:textColor="#111111"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+
+            <!-- Wishlist Button (Top Right) -->
             <ImageButton
                 android:id="@+id/btnWishlist"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
                 android:layout_gravity="top|end"
                 android:layout_margin="8dp"
-                android:background="#CCFFFFFF"
+                android:background="@drawable/bg_wishlist_circle"
                 android:contentDescription="Wishlist Toggle"
-                android:src="@android:drawable/btn_star_big_off"
-                android:padding="6dp" />
+                android:padding="5dp"
+                android:src="@android:drawable/btn_star_big_off" />
+
+            <!-- Quick Add Overlay Tag (Bottom Center of Image) -->
+            <TextView
+                android:id="@+id/btnQuickAddOverlay"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|center"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/bg_quick_add"
+                android:text="+ Quick add"
+                android:textColor="#333333"
+                android:textSize="11sp"
+                android:textStyle="bold" />
 
         </FrameLayout>
 
-        <!-- Product Name - FIXED: Now wraps properly -->
-        <TextView
-            android:id="@+id/tvProductName"
+        <!-- Bottom Content (Centered Alignment) -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="Product Name"
-            android:textColor="@color/deep_burgundy"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:maxLines="2"
-            android:ellipsize="end" />
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:paddingHorizontal="10dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="12dp">
 
-        <!-- Retail Price -->
-        <TextView
-            android:id="@+id/tvRetailPrice"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="Retail Price: R0"
-            android:textColor="#666666"
-            android:textSize="12sp" />
+            <!-- Product Title (Centered) -->
+            <TextView
+                android:id="@+id/tvProductName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:gravity="center"
+                android:maxLines="1"
+                android:text="Product Name"
+                android:textColor="#111111"
+                android:textSize="14sp"
+                android:textStyle="bold" />
 
-        <!-- Bulk Price -->
-        <TextView
-            android:id="@+id/tvBulkPrice"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Bulk Price: R0"
-            android:textColor="@color/golden_sand"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            <!-- Retail Price (Centered) -->
+            <TextView
+                android:id="@+id/tvRetailPrice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:gravity="center"
+                android:text="R 485.00"
+                android:textColor="#555555"
+                android:textSize="13sp" />
 
-        <!-- Scent Profile -->
-        <TextView
-            android:id="@+id/tvScentProfile"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:layout_marginBottom="8dp"
-            android:text="Scent Profile"
-            android:textColor="#666666"
-            android:textSize="12sp"
-            android:textStyle="italic"
-            android:maxLines="2"
-            android:ellipsize="end" />
+            <!-- Bulk Price (Centered) -->
+            <TextView
+                android:id="@+id/tvBulkPrice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:text="Bulk: R 225.00"
+                android:textColor="@color/golden_sand"
+                android:textSize="11sp"
+                android:textStyle="bold" />
 
-        <!-- Add to Cart Button -->
-        <Button
-            android:id="@+id/btnAddToCart"
-            android:layout_width="match_parent"
-            android:layout_height="40dp"
-            android:layout_marginTop="8dp"
-            android:backgroundTint="@color/deep_burgundy"
-            android:text="Add to Cart"
-            android:textColor="@android:color/white"
-            android:textSize="13sp" />
+            <!-- Rating & Reviews (Centered) -->
+            <TextView
+                android:id="@+id/tvReviews"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:gravity="center"
+                android:text="4 reviews ★"
+                android:textColor="#777777"
+                android:textSize="11sp" />
+
+            <!-- Scent Profile -->
+            <TextView
+                android:id="@+id/tvScentProfile"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:gravity="center"
+                android:maxLines="1"
+                android:text="Aromatic &amp; Woody Notes"
+                android:textColor="#888888"
+                android:textSize="10sp"
+                android:textStyle="italic" />
+
+            <!-- Add to Cart Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAddToCart"
+                android:layout_width="match_parent"
+                android:layout_height="34dp"
+                android:layout_marginTop="8dp"
+                android:backgroundTint="@color/deep_burgundy"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:paddingHorizontal="0dp"
+                android:paddingVertical="0dp"
+                android:text="Add to Cart"
+                android:textColor="@android:color/white"
+                android:textSize="11sp"
+                app:cornerRadius="17dp" />
+
+        </LinearLayout>
 
     </LinearLayout>
-</androidx.cardview.widget.CardView>
+
+</com.google.android.material.card.MaterialCardView>

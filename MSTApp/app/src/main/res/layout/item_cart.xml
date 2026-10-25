@@ -17,8 +17,10 @@
             android:id="@+id/ivCartProductImage"
             android:layout_width="80dp"
             android:layout_height="80dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/ic_launcher_foreground" />
+            android:background="#F8F8F8"
+            android:padding="6dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/bleu_de_chanel_eau_de_parfum_for_men" />
 
         <LinearLayout
             android:layout_width="0dp"
