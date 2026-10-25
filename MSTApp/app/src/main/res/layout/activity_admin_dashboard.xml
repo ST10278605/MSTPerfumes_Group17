@@ -13,7 +13,7 @@
         app:title="MST Perfumes - Admin Dashboard"
         app:titleTextColor="@android:color/white" />
 
-    <ScrollView
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fillViewport="true">
@@ -284,6 +284,6 @@
                 android:nestedScrollingEnabled="false" />
 
         </LinearLayout>
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 
 </LinearLayout>
