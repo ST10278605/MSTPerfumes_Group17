@@ -12,7 +12,7 @@ data class Testimonial(
     val location: String,
     val timeAgo: String,
     val productName: String,
-    val productImageResId: Int = com.example.mstperfumes.R.drawable.elegant_night
+    val productImageResId: Int = com.example.mstperfumes.R.drawable.bleu_de_chanel_eau_de_parfum_for_men
 )
 
 class TestimonialAdapter(

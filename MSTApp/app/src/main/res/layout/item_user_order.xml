@@ -55,7 +55,7 @@
                 android:layout_height="60dp"
                 android:background="#F0F0F0"
                 android:padding="4dp"
-                android:src="@drawable/elegant_night"
+                android:src="@drawable/bleu_de_chanel_eau_de_parfum_for_men"
                 android:contentDescription="Order Image" />
 
             <LinearLayout

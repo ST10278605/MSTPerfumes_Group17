@@ -59,8 +59,8 @@ class HomeFragment : Fragment() {
                     authorName = "Zandile L.",
                     location = "SABIE, MP",
                     timeAgo = "8h ago",
-                    productName = "Vanilla Royale",
-                    productImageResId = com.example.mstperfumes.R.drawable.vanilla_dream
+                    productName = "Aromatics Elixir",
+                    productImageResId = com.example.mstperfumes.R.drawable.aromatics_elixir_for_women
                 ),
                 Testimonial(
                     headline = "Wonderful!",
@@ -68,8 +68,8 @@ class HomeFragment : Fragment() {
                     authorName = "Kopano M.",
                     location = "Swartruggens, North West",
                     timeAgo = "19h ago",
-                    productName = "Pandora",
-                    productImageResId = com.example.mstperfumes.R.drawable.midnight_rose
+                    productName = "Coco Noir Pour Femme",
+                    productImageResId = com.example.mstperfumes.R.drawable.coco_noir_chanel_paris_for_women
                 ),
                 Testimonial(
                     headline = "Phenomenal!",
@@ -77,8 +77,8 @@ class HomeFragment : Fragment() {
                     authorName = "Kopano M.",
                     location = "Swartruggens, North West",
                     timeAgo = "19h ago",
-                    productName = "Scandalous - A...",
-                    productImageResId = com.example.mstperfumes.R.drawable.citrus_bloom
+                    productName = "Chance Chanel",
+                    productImageResId = com.example.mstperfumes.R.drawable.chance_chanel_for_women
                 ),
                 Testimonial(
                     headline = "Spectacular!",
@@ -86,8 +86,8 @@ class HomeFragment : Fragment() {
                     authorName = "Loraine L.",
                     location = "Emalahleni, GT",
                     timeAgo = "19h ago",
-                    productName = "24 Karat",
-                    productImageResId = com.example.mstperfumes.R.drawable.bold_leather
+                    productName = "Bleu De Chanel EDP",
+                    productImageResId = com.example.mstperfumes.R.drawable.bleu_de_chanel_eau_de_parfum_for_men
                 ),
                 Testimonial(
                     headline = "Life Changing!",
@@ -95,8 +95,8 @@ class HomeFragment : Fragment() {
                     authorName = "Thabo M.",
                     location = "Sandton, GP",
                     timeAgo = "1d ago",
-                    productName = "Elegant Night",
-                    productImageResId = com.example.mstperfumes.R.drawable.elegant_night
+                    productName = "Versace Eros EDT",
+                    productImageResId = com.example.mstperfumes.R.drawable.versace_eros_eau_de_toilette
                 ),
                 Testimonial(
                     headline = "Incredible Value!",
@@ -104,8 +104,8 @@ class HomeFragment : Fragment() {
                     authorName = "Lerato S.",
                     location = "Rosebank, GP",
                     timeAgo = "2d ago",
-                    productName = "Citrus Zest",
-                    productImageResId = com.example.mstperfumes.R.drawable.citrus_zest
+                    productName = "Jo Malone London",
+                    productImageResId = com.example.mstperfumes.R.drawable.jo_malone_for_men
                 )
             )
         )
@@ -185,7 +185,7 @@ class HomeFragment : Fragment() {
                     location = if (loc.isNotEmpty()) loc else "South Africa",
                     timeAgo = "Just now",
                     productName = if (prod.isNotEmpty()) prod else "MST Perfumes",
-                    productImageResId = com.example.mstperfumes.R.drawable.elegant_night
+                    productImageResId = com.example.mstperfumes.R.drawable.bleu_de_chanel_eau_de_parfum_for_men
                 )
                 allTestimonials.add(0, newReview)
                 testimonialAdapter.updateTestimonials(allTestimonials)
