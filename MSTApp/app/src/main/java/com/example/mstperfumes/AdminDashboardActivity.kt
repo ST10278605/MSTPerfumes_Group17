@@ -9,7 +9,6 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.mstperfumes.adapters.AdminProductAdapter
 import com.example.mstperfumes.data.DatabaseRepository
 import com.example.mstperfumes.data.ProductRepository
 import com.example.mstperfumes.databinding.ActivityAdminDashboardBinding
@@ -18,7 +17,6 @@ import com.example.mstperfumes.models.Product
 class AdminDashboardActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityAdminDashboardBinding
-    private lateinit var adapter: AdminProductAdapter
 
     private var onImagePickedCallback: ((android.net.Uri) -> Unit)? = null
 
@@ -56,7 +54,7 @@ class AdminDashboardActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         setupToolbar()
-        setupRecyclerView()
+        loadProductInventory()
         updateDashboardStats()
 
         binding.btnAddNewProduct.setOnClickListener {
@@ -130,14 +128,50 @@ class AdminDashboardActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupRecyclerView() {
-        adapter = AdminProductAdapter(
-            ProductRepository.getAllProducts(),
-            onEdit = { product -> showEditProductDialog(product) },
-            onDelete = { product -> confirmDeleteProduct(product) }
-        )
-        binding.rvAdminProducts.layoutManager = LinearLayoutManager(this)
-        binding.rvAdminProducts.adapter = adapter
+    private fun loadProductInventory() {
+        binding.llProductsContainer.removeAllViews()
+        val products = ProductRepository.getAllProducts()
+        val currencyFormat = java.text.NumberFormat.getCurrencyInstance(java.util.Locale("en", "ZA"))
+
+        products.forEach { product ->
+            val itemBinding = com.example.mstperfumes.databinding.ItemAdminProductBinding.inflate(
+                layoutInflater,
+                binding.llProductsContainer,
+                false
+            )
+
+            itemBinding.apply {
+                tvAdminProductName.text = "${product.name} (${product.size})"
+                tvAdminCategory.text = "Category: ${product.category.replaceFirstChar { it.uppercase() }}"
+                tvAdminScentProfile.text = product.scentProfile
+                tvAdminRetailPrice.text = "Retail: ${currencyFormat.format(product.retailPrice)}"
+                tvAdminBulkPrice.text = "Bulk: ${currencyFormat.format(product.bulkPrice)}"
+
+                if (!product.imageUri.isNullOrEmpty()) {
+                    com.bumptech.glide.Glide.with(root.context)
+                        .load(product.imageUri)
+                        .placeholder(if (product.imageResId != 0) product.imageResId else android.R.drawable.ic_menu_gallery)
+                        .error(if (product.imageResId != 0) product.imageResId else android.R.drawable.ic_menu_gallery)
+                        .into(ivAdminProductImage)
+                } else if (product.imageResId != 0) {
+                    com.bumptech.glide.Glide.with(root.context)
+                        .load(product.imageResId)
+                        .into(ivAdminProductImage)
+                } else {
+                    ivAdminProductImage.setImageResource(android.R.drawable.ic_menu_gallery)
+                }
+
+                btnEditProduct.setOnClickListener {
+                    showEditProductDialog(product)
+                }
+
+                btnDeleteProduct.setOnClickListener {
+                    confirmDeleteProduct(product)
+                }
+            }
+
+            binding.llProductsContainer.addView(itemBinding.root)
+        }
     }
 
     private fun updateDashboardStats() {
@@ -152,7 +186,7 @@ class AdminDashboardActivity : AppCompatActivity() {
         binding.tvWomenCount.text = womenCount.toString()
         binding.tvRegisteredUsersCount.text = usersCount.toString()
 
-        adapter.updateProducts(allProducts)
+        loadProductInventory()
     }
 
     private fun showRegisteredUsersDialog() {

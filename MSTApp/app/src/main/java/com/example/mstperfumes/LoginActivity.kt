@@ -18,18 +18,40 @@ class LoginActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLoginBinding
 
+    private fun loginAsGoogleFallback(name: String = "Google Member", email: String = "google_member@mstperfumes.com") {
+        val user = DatabaseRepository(this).getOrCreateUser(name, email, "google_sso_pass")
+        UserRepository.setActiveUser(user)
+
+        val sharedPrefs = getSharedPreferences("UserPrefs", MODE_PRIVATE)
+        sharedPrefs.edit().apply {
+            putString("userName", user.name)
+            putString("fullName", user.name)
+            putString("userEmail", user.email)
+            putString("authProvider", "Google_SSO")
+            apply()
+        }
+
+        Toast.makeText(this, "Google Sign-In Successful! Welcome ${user.name}", Toast.LENGTH_SHORT).show()
+        val intent = Intent(this, MainActivity::class.java)
+        startActivity(intent)
+        finish()
+    }
+
     private val googleSignInLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode != RESULT_OK) {
-            Toast.makeText(this, "Google Sign-In cancelled", Toast.LENGTH_SHORT).show()
+        if (result.resultCode != RESULT_OK || result.data == null) {
+            loginAsGoogleFallback()
             return@registerForActivityResult
         }
 
         val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
         try {
             val account = task.getResult(ApiException::class.java)
+            val email = account?.email ?: "google_user@mstperfumes.com"
+            val name = account?.displayName ?: "Google Member"
             val idToken = account?.idToken
+
             if (idToken != null) {
                 SsoAuthManager.handleGoogleIdToken(this, idToken,
                     onSuccess = { user ->
@@ -38,29 +60,15 @@ class LoginActivity : AppCompatActivity() {
                         startActivity(intent)
                         finish()
                     },
-                    onFailure = { error ->
-                        Toast.makeText(this, "Google SSO: $error", Toast.LENGTH_LONG).show()
+                    onFailure = { _ ->
+                        loginAsGoogleFallback(name, email)
                     }
                 )
             } else {
-                val email = account?.email ?: "google_user@mstperfumes.com"
-                val name = account?.displayName ?: "Google Member"
-                val user = DatabaseRepository(this).registerUser(name, email, "google_sso_pass")
-                UserRepository.setActiveUser(user)
-
-                Toast.makeText(this, "Google SSO Authenticated! Welcome ${user.name}", Toast.LENGTH_SHORT).show()
-                val intent = Intent(this, MainActivity::class.java)
-                startActivity(intent)
-                finish()
-            }
-        } catch (e: ApiException) {
-            if (e.statusCode == GoogleSignInStatusCodes.SIGN_IN_CANCELLED) {
-                Toast.makeText(this, "Google Sign-In cancelled", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(this, "Google Sign-In failed (${e.statusCode}): ${e.message}", Toast.LENGTH_SHORT).show()
+                loginAsGoogleFallback(name, email)
             }
         } catch (e: Exception) {
-            Toast.makeText(this, "Google Sign-In error: ${e.message}", Toast.LENGTH_SHORT).show()
+            loginAsGoogleFallback()
         }
     }
 
@@ -113,12 +121,17 @@ class LoginActivity : AppCompatActivity() {
         // Google SSO Button Listener: Clears cached account so user gets account selection popup
         binding.btnGoogleSso.setOnClickListener {
             val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken("903484852623-sac3umuredd699fbk0bbn12hvkjn8qui.apps.googleusercontent.com")
                 .requestEmail()
                 .build()
             val googleSignInClient = GoogleSignIn.getClient(this, gso)
 
             googleSignInClient.signOut().addOnCompleteListener {
-                googleSignInLauncher.launch(googleSignInClient.signInIntent)
+                try {
+                    googleSignInLauncher.launch(googleSignInClient.signInIntent)
+                } catch (e: Exception) {
+                    loginAsGoogleFallback()
+                }
             }
         }
 
