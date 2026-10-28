@@ -30,7 +30,37 @@ class CheckoutFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         loadSavedInformation()
         updateOrderSummary()
+        setupBankDropdown()
+        setupAccountTypeDropdown()
         setupCheckoutSteps()
+    }
+
+    private fun setupBankDropdown() {
+        val banks = arrayOf(
+            "Absa Bank",
+            "Access Bank",
+            "African Bank",
+            "Bank Zero Mutual Bank",
+            "Bidvest Bank",
+            "Capitec Bank",
+            "Discovery Bank",
+            "First National Bank (FNB)",
+            "Investec Bank",
+            "Nedbank",
+            "Standard Bank",
+            "TymeBank"
+        )
+        val adapter = android.widget.ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, banks)
+        (binding.etBankName as? android.widget.AutoCompleteTextView)?.setAdapter(adapter)
+    }
+
+    private fun setupAccountTypeDropdown() {
+        val accountTypes = arrayOf(
+            "Current / Cheque Account (Everyday transactional banking)",
+            "Savings Account (Set aside funds & earn interest)"
+        )
+        val adapter = android.widget.ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, accountTypes)
+        (binding.etAccType as? android.widget.AutoCompleteTextView)?.setAdapter(adapter)
     }
 
     private fun loadSavedInformation() {
@@ -106,6 +136,7 @@ class CheckoutFragment : Fragment() {
             binding.layoutPaymentStep.visibility = View.VISIBLE
             binding.tvCheckoutStepTitle.text = "Checkout - Payment Details"
             binding.tvCheckoutStepSub.text = "Step 2 of 2: Please enter your bank & account details"
+            binding.progressBarCheckout.progress = 100
         }
 
         // Back to Delivery Details
@@ -114,6 +145,7 @@ class CheckoutFragment : Fragment() {
             binding.cardDeliveryStep.visibility = View.VISIBLE
             binding.tvCheckoutStepTitle.text = "Checkout - Delivery Details"
             binding.tvCheckoutStepSub.text = "Step 1 of 2: Please enter your delivery address"
+            binding.progressBarCheckout.progress = 50
         }
 
         // Step 2: Confirm & Place Order
@@ -126,15 +158,31 @@ class CheckoutFragment : Fragment() {
             val branch = binding.etBranch.text.toString().trim()
             val accType = binding.etAccType.text.toString().trim()
 
-            if (bankName.isEmpty() || cardNumber.isEmpty() || branch.isEmpty() || accType.isEmpty()) {
-                Toast.makeText(requireContext(), "Please fill in all bank details (Bank Name, Account/Card No, Branch Code, Account Type)", Toast.LENGTH_SHORT).show()
+            if (bankName.isEmpty()) {
+                Toast.makeText(requireContext(), "Please select your bank from the list", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
+            if (cardNumber.isEmpty() || !cardNumber.matches(Regex("^\\d{7,19}$"))) {
+                Toast.makeText(requireContext(), "Please enter a valid account / card number (7 to 19 digits)", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            if (branch.isEmpty() || !branch.matches(Regex("^\\d{3,6}$"))) {
+                Toast.makeText(requireContext(), "Please enter a valid branch code (3 to 6 digits)", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            if (accType.isEmpty()) {
+                Toast.makeText(requireContext(), "Please enter account type (e.g. Savings, Cheque)", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            // Memory Sanitization: Clear sensitive card number and branch code fields immediately
+            binding.etCardNumber.text?.clear()
+            binding.etBranch.text?.clear()
 
             // Save details to preferences
             saveInformation(name, addressStr, phone)
 
-            // Record in Database
+            // Record in Database (NO bank details saved to local SQLite DB, only order & payment summary)
             val dbRepo = com.example.mstperfumes.data.DatabaseRepository(requireContext())
             val sharedPrefs = requireContext().getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE)
             val userEmail = sharedPrefs.getString("userEmail", null)
@@ -168,9 +216,9 @@ class CheckoutFragment : Fragment() {
                 Order Number: ${createdOrder.orderCode}
                 Recipient: $name
                 Delivery Address: $addressStr
-                Payment: $bankName Bank ($accType)
+                Payment: $bankName ($accType)
                 
-                Your order is confirmed and being prepared!
+                Your order is confirmed and securely processed!
             """.trimIndent()
 
             androidx.appcompat.app.AlertDialog.Builder(requireContext())
@@ -209,6 +257,9 @@ class CheckoutFragment : Fragment() {
 
         binding.layoutPaymentStep.visibility = View.GONE
         binding.cardDeliveryStep.visibility = View.VISIBLE
+        binding.tvCheckoutStepTitle.text = "Checkout - Delivery Details"
+        binding.tvCheckoutStepSub.text = "Step 1 of 2: Please enter your delivery address"
+        binding.progressBarCheckout.progress = 50
     }
 
     override fun onResume() {

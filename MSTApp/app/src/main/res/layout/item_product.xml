@@ -51,18 +51,7 @@
                 android:padding="5dp"
                 android:src="@android:drawable/btn_star_big_off" />
 
-            <!-- Quick Add Overlay Tag (Bottom Center of Image) -->
-            <TextView
-                android:id="@+id/btnQuickAddOverlay"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom|center"
-                android:layout_marginBottom="8dp"
-                android:background="@drawable/bg_quick_add"
-                android:text="+ Quick add"
-                android:textColor="#333333"
-                android:textSize="11sp"
-                android:textStyle="bold" />
+
 
         </FrameLayout>
 
