@@ -202,8 +202,11 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
+                        app:cardBackgroundColor="#FFFFFF"
+                        app:strokeColor="#D4AF37"
+                        app:strokeWidth="1dp"
                         app:cardCornerRadius="12dp"
-                        app:cardElevation="2dp">
+                        app:cardElevation="3dp">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -213,29 +216,42 @@
 
                             <TextView
                                 android:id="@+id/tvDetailName"
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="Full Name: Siphesihle"
-                                android:textColor="@android:color/black"
-                                android:textSize="15sp" />
+                                android:textColor="#111111"
+                                android:textSize="15sp"
+                                android:textStyle="bold" />
 
                             <TextView
                                 android:id="@+id/tvDetailEmail"
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="8dp"
                                 android:text="Email: siphe@mstperfumes.com"
-                                android:textColor="@android:color/black"
+                                android:textColor="#222222"
                                 android:textSize="15sp" />
 
                             <TextView
                                 android:id="@+id/tvDetailRegisteredDate"
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="8dp"
                                 android:text="Registered: 2024-11-01"
-                                android:textColor="@android:color/darker_gray"
-                                android:textSize="13sp" />
+                                android:textColor="#333333"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tvAuthProvider"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:text="🛡️ Authentication: Google Sign-In"
+                                android:textColor="#1976D2"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                android:visibility="gone" />
 
                         </LinearLayout>
 

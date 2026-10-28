@@ -53,24 +53,32 @@ class TrackParcelActivity : AppCompatActivity() {
 
     private fun setupManualStatusButtons() {
         binding.btnSetPlaced.setOnClickListener {
-            setOrderStatus(OrderRepository.STATUS_PLACED)
-            Toast.makeText(this, "Status set to Order Placed", Toast.LENGTH_SHORT).show()
+            updateStatusAndReturn(OrderRepository.STATUS_PLACED, "Status set to Order Placed. Returning...")
         }
 
         binding.btnSetPreparing.setOnClickListener {
-            setOrderStatus(OrderRepository.STATUS_PREPARING)
-            Toast.makeText(this, "Status set to Preparing", Toast.LENGTH_SHORT).show()
+            updateStatusAndReturn(OrderRepository.STATUS_PREPARING, "Status set to Preparing. Returning...")
         }
 
         binding.btnSetInTransit.setOnClickListener {
-            setOrderStatus(OrderRepository.STATUS_IN_TRANSIT)
-            Toast.makeText(this, "Status set to In Transit", Toast.LENGTH_SHORT).show()
+            updateStatusAndReturn(OrderRepository.STATUS_IN_TRANSIT, "Status set to In Transit. Returning...")
         }
 
         binding.btnSetDelivered.setOnClickListener {
-            setOrderStatus(OrderRepository.STATUS_DELIVERED)
-            Toast.makeText(this, "Status set to Delivered", Toast.LENGTH_SHORT).show()
+            updateStatusAndReturn(OrderRepository.STATUS_DELIVERED, "Order Delivered! Returning to dashboard...")
         }
+    }
+
+    private fun updateStatusAndReturn(status: String, message: String) {
+        setOrderStatus(status)
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+
+        binding.root.postDelayed({
+            val intent = Intent(this, MainActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            startActivity(intent)
+            finish()
+        }, 1200)
     }
 
     private fun setOrderStatus(status: String) {

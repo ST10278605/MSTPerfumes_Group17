@@ -68,7 +68,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:text="Sipho is driving to your delivery address."
-                        android:textColor="#CCCCCC"
+                        android:textColor="#FFFFFF"
                         android:textSize="13sp" />
 
                     <LinearLayout
@@ -87,7 +87,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Estimated Arrival"
-                                android:textColor="#CCCCCC"
+                                android:textColor="#FFFFFF"
                                 android:textSize="11sp" />
 
                             <TextView
@@ -110,7 +110,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Distance Remaining"
-                                android:textColor="#CCCCCC"
+                                android:textColor="#FFFFFF"
                                 android:textSize="11sp" />
 
                             <TextView
@@ -182,14 +182,14 @@
                             android:layout_weight="1"
                             android:gravity="center"
                             android:text="Preparing"
-                            android:textColor="#CCCCCC"
+                            android:textColor="#FFFFFF"
                             android:textSize="10sp" />
 
                         <View
                             android:id="@+id/lineStep2"
                             android:layout_width="12dp"
                             android:layout_height="2dp"
-                            android:background="#CCCCCC" />
+                            android:background="#D4AF37" />
 
                         <TextView
                             android:id="@+id/stepInTransit"
@@ -198,14 +198,14 @@
                             android:layout_weight="1"
                             android:gravity="center"
                             android:text="In Transit"
-                            android:textColor="#CCCCCC"
+                            android:textColor="#FFFFFF"
                             android:textSize="10sp" />
 
                         <View
                             android:id="@+id/lineStep3"
                             android:layout_width="12dp"
                             android:layout_height="2dp"
-                            android:background="#CCCCCC" />
+                            android:background="#D4AF37" />
 
                         <TextView
                             android:id="@+id/stepDelivered"
@@ -214,7 +214,7 @@
                             android:layout_weight="1"
                             android:gravity="center"
                             android:text="Delivered"
-                            android:textColor="#CCCCCC"
+                            android:textColor="#FFFFFF"
                             android:textSize="10sp" />
 
                     </LinearLayout>

@@ -80,9 +80,7 @@ class ProductAdapter(
                     android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
                 }
 
-                btnQuickAddOverlay.setOnClickListener {
-                    onAddToCart(product)
-                }
+
 
                 btnAddToCart.setOnClickListener {
                     onAddToCart(product)
