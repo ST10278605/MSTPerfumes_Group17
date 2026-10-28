@@ -11,6 +11,7 @@ import com.example.mstperfumes.data.UserRepository
 import com.example.mstperfumes.databinding.ActivityLoginBinding
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes
 import com.google.android.gms.common.api.ApiException
 
 class LoginActivity : AppCompatActivity() {
@@ -20,6 +21,11 @@ class LoginActivity : AppCompatActivity() {
     private val googleSignInLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
+        if (result.resultCode != RESULT_OK) {
+            Toast.makeText(this, "Google Sign-In cancelled", Toast.LENGTH_SHORT).show()
+            return@registerForActivityResult
+        }
+
         val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
         try {
             val account = task.getResult(ApiException::class.java)
@@ -47,14 +53,14 @@ class LoginActivity : AppCompatActivity() {
                 startActivity(intent)
                 finish()
             }
+        } catch (e: ApiException) {
+            if (e.statusCode == GoogleSignInStatusCodes.SIGN_IN_CANCELLED) {
+                Toast.makeText(this, "Google Sign-In cancelled", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Google Sign-In failed (${e.statusCode}): ${e.message}", Toast.LENGTH_SHORT).show()
+            }
         } catch (e: Exception) {
-            val defaultUser = DatabaseRepository(this).registerUser("Google Member", "google_sso@mstperfumes.com", "google_sso_pass")
-            UserRepository.setActiveUser(defaultUser)
-
-            Toast.makeText(this, "Google Single Sign-On Success! Welcome ${defaultUser.name}", Toast.LENGTH_SHORT).show()
-            val intent = Intent(this, MainActivity::class.java)
-            startActivity(intent)
-            finish()
+            Toast.makeText(this, "Google Sign-In error: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 

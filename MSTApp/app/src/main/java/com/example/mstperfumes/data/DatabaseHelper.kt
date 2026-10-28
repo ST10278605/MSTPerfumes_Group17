@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteOpenHelper
 import java.math.BigInteger
 import java.security.MessageDigest
 
-class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
+class DatabaseHelper(private val context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
     companion object {
         private const val DATABASE_NAME = "mst_perfumes_db.db"
@@ -249,6 +249,23 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             db.setTransactionSuccessful()
         } finally {
             db.endTransaction()
+        }
+
+        exportDatabase()
+    }
+
+    fun exportDatabase(): java.io.File? {
+        return try {
+            val dbFile = context.getDatabasePath(DATABASE_NAME)
+            val exportDir = context.getExternalFilesDir(null)
+            if (exportDir != null && dbFile.exists()) {
+                val destFile = java.io.File(exportDir, DATABASE_NAME)
+                dbFile.copyTo(destFile, overwrite = true)
+                destFile
+            } else null
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
         }
     }
 

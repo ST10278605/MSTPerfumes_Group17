@@ -8,6 +8,7 @@ import com.example.mstperfumes.models.User
 import com.example.mstperfumes.models.UserMessage
 import com.example.mstperfumes.models.UserOrder
 import com.example.mstperfumes.models.WishlistItem
+import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -16,6 +17,98 @@ class DatabaseRepository(context: Context) {
 
     private val appContext = context.applicationContext
     private val dbHelper by lazy { DatabaseHelper(appContext) }
+
+    init {
+        try {
+            dbHelper.writableDatabase
+            dbHelper.exportDatabase()
+            syncAllSeedDataToFirestore()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun syncToFirestore(collectionName: String, docId: String, data: Map<String, Any?>) {
+        try {
+            FirebaseFirestore.getInstance()
+                .collection(collectionName)
+                .document(docId)
+                .set(data.filterValues { it != null })
+                .addOnSuccessListener {
+                    android.util.Log.i("FirestoreSync", "Synced $collectionName/$docId to Firebase Cloud")
+                }
+                .addOnFailureListener { e ->
+                    android.util.Log.e("FirestoreSync", "Failed to sync $collectionName/$docId", e)
+                }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    fun syncAllSeedDataToFirestore() {
+        try {
+            getAllUsers().forEach { user ->
+                syncToFirestore("users", user.email, mapOf(
+                    "id" to user.id,
+                    "name" to user.name,
+                    "email" to user.email,
+                    "registeredDate" to user.registeredDate
+                ))
+            }
+            getAllOrders().forEach { order ->
+                syncToFirestore("orders", order.orderCode, mapOf(
+                    "id" to order.id,
+                    "orderCode" to order.orderCode,
+                    "userId" to order.userId,
+                    "userName" to order.userName,
+                    "itemsSummary" to order.itemsSummary,
+                    "totalAmount" to order.totalAmount,
+                    "shippingAddress" to order.shippingAddress,
+                    "paymentMethod" to order.paymentMethod,
+                    "status" to order.status,
+                    "orderDate" to order.orderDate
+                ))
+            }
+            getAllSupportTickets().forEach { ticket ->
+                syncToFirestore("tickets", ticket.id.toString(), mapOf(
+                    "id" to ticket.id,
+                    "userName" to ticket.userName,
+                    "userEmail" to ticket.userEmail,
+                    "category" to ticket.category,
+                    "subject" to ticket.subject,
+                    "message" to ticket.message,
+                    "status" to ticket.status,
+                    "dateSubmitted" to ticket.dateSubmitted
+                ))
+            }
+            getAllWishlists().forEach { wish ->
+                syncToFirestore("wishlists", "${wish.userId}_${wish.productId}", mapOf(
+                    "id" to wish.id,
+                    "userId" to wish.userId,
+                    "productId" to wish.productId,
+                    "productName" to wish.productName,
+                    "retailPrice" to wish.retailPrice,
+                    "bulkPrice" to wish.bulkPrice,
+                    "scentProfile" to wish.scentProfile,
+                    "category" to wish.category,
+                    "addedDate" to wish.addedDate
+                ))
+            }
+            ProductRepository.getAllProducts().forEach { prod ->
+                syncToFirestore("products", prod.id.toString(), mapOf(
+                    "id" to prod.id,
+                    "name" to prod.name,
+                    "size" to prod.size,
+                    "retailPrice" to prod.retailPrice,
+                    "bulkPrice" to prod.bulkPrice,
+                    "scentProfile" to prod.scentProfile,
+                    "category" to prod.category
+                ))
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 
     // ==================== USER AUTH & ACCOUNTS ====================
 
@@ -82,7 +175,16 @@ class DatabaseRepository(context: Context) {
 
         val newRowId = db.insert(DatabaseHelper.TABLE_USER, null, values)
 
-        return User(id = newRowId.toInt(), name = name, email = email, registeredDate = currentDate)
+        val newUser = User(id = newRowId.toInt(), name = name, email = email, registeredDate = currentDate)
+        syncToFirestore("users", email, mapOf(
+            "id" to newUser.id,
+            "name" to name,
+            "email" to email,
+            "registeredDate" to currentDate,
+            "status" to "Verified"
+        ))
+
+        return newUser
     }
 
     sealed class AuthResult {
@@ -242,7 +344,7 @@ class DatabaseRepository(context: Context) {
         }
         db.insert(DatabaseHelper.TABLE_DELIVERY, null, deliveryValues)
 
-        return UserOrder(
+        val createdOrder = UserOrder(
             id = newRowId.toInt(),
             orderCode = orderCode,
             userId = userId,
@@ -254,6 +356,21 @@ class DatabaseRepository(context: Context) {
             status = "In Transit",
             orderDate = currentDate
         )
+
+        syncToFirestore("orders", orderCode, mapOf(
+            "id" to createdOrder.id,
+            "orderCode" to orderCode,
+            "userId" to userId,
+            "userName" to userName,
+            "itemsSummary" to itemsSummary,
+            "totalAmount" to totalAmount,
+            "shippingAddress" to shippingAddress,
+            "paymentMethod" to paymentMethod,
+            "status" to "In Transit",
+            "orderDate" to currentDate
+        ))
+
+        return createdOrder
     }
 
     fun getOrdersForUser(userId: Int): List<UserOrder> {
@@ -458,6 +575,18 @@ class DatabaseRepository(context: Context) {
                 DatabaseHelper.TABLE_WISHLIST, null, values,
                 android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
             )
+
+            syncToFirestore("wishlists", "${userId}_${product.id}", mapOf(
+                "userId" to userId,
+                "productId" to product.id,
+                "productName" to product.name,
+                "retailPrice" to product.retailPrice,
+                "bulkPrice" to product.bulkPrice,
+                "scentProfile" to product.scentProfile,
+                "category" to product.category,
+                "addedDate" to currentDate
+            ))
+
             true
         }
     }
@@ -570,7 +699,7 @@ class DatabaseRepository(context: Context) {
 
         val newId = db.insert(DatabaseHelper.TABLE_CONTACT, null, values)
 
-        return SupportTicket(
+        val createdTicket = SupportTicket(
             id = newId.toInt(),
             userName = name,
             userEmail = email,
@@ -580,6 +709,19 @@ class DatabaseRepository(context: Context) {
             status = "Pending",
             dateSubmitted = currentDate
         )
+
+        syncToFirestore("tickets", newId.toString(), mapOf(
+            "id" to createdTicket.id,
+            "userName" to name,
+            "userEmail" to email,
+            "category" to category,
+            "subject" to subject,
+            "message" to message,
+            "status" to "Pending",
+            "dateSubmitted" to currentDate
+        ))
+
+        return createdTicket
     }
 
     fun getAllSupportTickets(): List<SupportTicket> {
