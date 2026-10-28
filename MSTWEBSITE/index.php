@@ -192,6 +192,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_t
                                     }
                                     $stmt->close();
                                 }
+                                if ($error === '') {
+                                    $_SESSION['cart'][ (string) $productId ] = $newQuantity;
+                                }
                             } else {
                                 $quantity = 1;
                                 $stmt = $conn->prepare('INSERT INTO cart_items (cart_id, product_id, quantity) VALUES (?, ?, ?)');
@@ -203,6 +206,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_t
                                         $error = 'Unable to add this perfume to your cart. Please try again.';
                                     }
                                     $stmt->close();
+                                }
+                                if ($error === '') {
+                                    $_SESSION['cart'][ (string) $productId ] = 1;
                                 }
                             }
                         }
@@ -338,18 +344,18 @@ $pageTitle = $allowedFilters[$filter] ?? 'All Perfumes';
     <title>MST PERFUMES | Home</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    
+    <link rel="icon" type="image/x-icon" href="pictures/logo.svg">
 </head>
 <body>
 <div class="top-bar">
     <span><i class="fas fa-star" aria-hidden="true"></i> Discover your next signature scent</span>
-    <span>Free shipping on orders over R600</span>
+    <span>Free delivery on orders over R600</span>
 </div>
 
 <header class="site-header">
     <div class="site-header__inner">
         <a class="brand" href="index.php" aria-label="MST Perfumes home">
-            <img src="pictures/logo.png" alt="MST Perfumes logo">
+            <img src="pictures/logo.jpeg" alt="MST Perfumes logo">
         </a>
 
         <nav class="site-nav" aria-label="Main navigation">
@@ -366,8 +372,8 @@ $pageTitle = $allowedFilters[$filter] ?? 'All Perfumes';
                 </ul>
             </div>
 
-            <a href="forum.php#reviews">Reviews</a>
-            <a href="#contact-us">Contact Us</a>
+            <a href="review">Reviews</a>
+            <a href="contact-us">Contact Us</a>
         </nav>
 
         <div class="account">
@@ -393,9 +399,9 @@ $pageTitle = $allowedFilters[$filter] ?? 'All Perfumes';
                         <li><a href="admin_orders.php">Manage Orders</a></li>
                         <li><a href="login.php?logout=1">Logout</a></li>
                     <?php else: ?>
-                        <li><a href="profile.php">My Profile</a></li>
-                        <li><a href="my_orders.php">My Orders</a></li>
-                        <li><a href="forum.php#reviews">My Reviews</a></li>
+                        <li><a href="usersprofile.php">My Profile</a></li>
+                        <li><a href="order.php">My Orders</a></li>
+                        <li><a href="review.php">My Reviews</a></li>
                         <li><a href="login.php?logout=1">Logout</a></li>
                     <?php endif; ?>
                 </ul>
@@ -535,8 +541,14 @@ $pageTitle = $allowedFilters[$filter] ?? 'All Perfumes';
                                     <?php else: ?>
                                         <span class="product-reviews">No reviews yet</span>
                                     <?php endif; ?>
-                                    <span class="product-stock <?= $stock < 1 ? 'out-of-stock' : '' ?>">
-                                        <?= $stock > 0 ? 'In stock' : 'Out of stock' ?>
+                                    <span class="product-stock <?= $stock < 1 ? 'out-of-stock' : ($stock < 10 ? 'low-stock' : '') ?>">
+                                        <?php if ($stock < 1): ?>
+                                            Out of stock
+                                        <?php elseif ($stock < 10): ?>
+                                            Only <?= $stock ?> left in stock!
+                                        <?php else: ?>
+                                            In stock
+                                        <?php endif; ?>
                                     </span>
                                 </div>
 
@@ -603,45 +615,6 @@ $pageTitle = $allowedFilters[$filter] ?? 'All Perfumes';
     </div>
 </footer>
 
-<script>
-(() => {
-    const dropdowns = document.querySelectorAll('.nav-dropdown');
-
-    function closeDropdown(dropdown) {
-        const button = dropdown.querySelector('.nav-dropdown__toggle');
-        const menu = dropdown.querySelector('.nav-dropdown__menu');
-        if (!button || !menu) return;
-        button.setAttribute('aria-expanded', 'false');
-        menu.classList.remove('is-open');
-    }
-
-    dropdowns.forEach((dropdown) => {
-        const button = dropdown.querySelector('.nav-dropdown__toggle');
-        const menu = dropdown.querySelector('.nav-dropdown__menu');
-        if (!button || !menu) return;
-
-        button.addEventListener('click', () => {
-            const shouldOpen = button.getAttribute('aria-expanded') !== 'true';
-
-            dropdowns.forEach(closeDropdown);
-
-            if (shouldOpen) {
-                button.setAttribute('aria-expanded', 'true');
-                menu.classList.add('is-open');
-            }
-        });
-    });
-
-    document.addEventListener('click', (event) => {
-        dropdowns.forEach((dropdown) => {
-            if (!dropdown.contains(event.target)) closeDropdown(dropdown);
-        });
-    });
-
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') dropdowns.forEach(closeDropdown);
-    });
-})();
-</script>
+<script src="js/script1.js" defer></script>
 </body>
 </html>

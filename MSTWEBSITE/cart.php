@@ -2,15 +2,44 @@
 session_start();
 include "MSTDBConn.php";
 
-$isLoggedIn = isset($_SESSION["user_id"]);
-$username = $isLoggedIn ? htmlspecialchars($_SESSION["name"] ?? $_SESSION["username"] ?? 'User') : null;
-
-$cartCount = 0;
-if (isset($_SESSION["cart"]) && is_array($_SESSION["cart"])) {
-    $cartCount = array_sum($_SESSION["cart"]);
+function e(mixed $value): string
+{
+    return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 }
 
-// products map (same ids as shopping.php)
+$isLoggedIn = isset($_SESSION["user_id"]);
+$userRole = strtolower((string) ($_SESSION['role'] ?? 'user'));
+$isAdmin = $isLoggedIn && $userRole === 'admin';
+$filter = $_GET['filter'] ?? 'all';
+$userName = $isLoggedIn ? htmlspecialchars($_SESSION["name"] ?? $_SESSION["username"] ?? 'User') : null;
+
+if (!isset($_SESSION['cart']) || !is_array($_SESSION['cart'])) {
+    $_SESSION['cart'] = [];
+}
+
+if ($isLoggedIn) {
+    $cartDb = [];
+    $stmt = $conn->prepare('SELECT ci.product_id, ci.quantity FROM carts c INNER JOIN cart_items ci ON ci.cart_id = c.cart_id WHERE c.user_id = ?');
+    if ($stmt) {
+        $stmt->bind_param('i', $_SESSION['user_id']);
+        if ($stmt->execute()) {
+            $result = $stmt->get_result();
+            while ($result && ($row = $result->fetch_assoc())) {
+                $pid = (string) $row['product_id'];
+                $cartDb[$pid] = (int) $row['quantity'];
+            }
+        }
+        $stmt->close();
+    }
+
+    if (!empty($cartDb)) {
+        $_SESSION['cart'] = $cartDb;
+    }
+}
+
+$cartCount = array_sum($_SESSION['cart']);
+
+// products map. Prefer the real database product ids and keep the legacy p1..p12 map as fallback.
 $products = [
     'p1' => ['name' => 'Amen (60ml)', 'price' => 160, 'img' => 'pictures/product.JPEG'],
     'p2' => ['name' => 'Silver Sent Intense (50ml)', 'price' => 140, 'img' => 'pictures/product1.JPEG'],
@@ -25,6 +54,20 @@ $products = [
     'p11' => ['name' => 'Far Away (50ml)', 'price' => 140, 'img' => 'pictures/product10.JPEG'],
     'p12' => ['name' => 'La vie est belle (50ml)', 'price' => 140, 'img' => 'pictures/product11.JPEG'],
 ];
+
+$productResult = $conn->query('SELECT product_id, name, price, image FROM products ORDER BY product_id');
+if ($productResult) {
+    while ($row = $productResult->fetch_assoc()) {
+        $id = (string) $row['product_id'];
+        $products[$id] = [
+            'name' => (string) ($row['name'] ?? $id),
+            'price' => (float) ($row['price'] ?? 0),
+            'img' => (string) ($row['image'] ?? 'pictures/default.jpg'),
+        ];
+        $products['p' . $id] = $products[$id];
+    }
+    $productResult->free();
+}
 
 // Actions: remove, update quantities, checkout
 if (isset($_GET['remove'])) {
@@ -191,6 +234,7 @@ if (isset($_POST['checkout'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/style.css">
     <title>MST PERFUMES | CART</title>
+    <link rel="icon" type="image/x-icon" href="pictures/logo.svg">
 
 </head>
 
@@ -199,13 +243,13 @@ if (isset($_POST['checkout'])) {
 
 <div class="top-bar">
     <span><i class="fas fa-star" aria-hidden="true"></i> Discover your next signature scent</span>
-    <span>Free shipping on orders over R600</span>
+    <span>Free delivery on orders over R600</span>
 </div>
 
 <header class="site-header">
     <div class="site-header__inner">
         <a class="brand" href="index.php" aria-label="MST Perfumes home">
-            <img src="pictures/logo.png" alt="MST Perfumes logo">
+            <img src="pictures/logo.jpeg" alt="MST Perfumes logo">
         </a>
 
         <nav class="site-nav" aria-label="Main navigation">
@@ -222,8 +266,8 @@ if (isset($_POST['checkout'])) {
                 </ul>
             </div>
 
-            <a href="forum.php#reviews">Reviews</a>
-            <a href="#contact-us">Contact Us</a>
+            <a href="review">Reviews</a>
+            <a href="contact-us">Contact Us</a>
         </nav>
 
         <div class="account">
@@ -249,9 +293,9 @@ if (isset($_POST['checkout'])) {
                         <li><a href="admin_orders.php">Manage Orders</a></li>
                         <li><a href="login.php?logout=1">Logout</a></li>
                     <?php else: ?>
-                        <li><a href="profile.php">My Profile</a></li>
-                        <li><a href="my_orders.php">My Orders</a></li>
-                        <li><a href="forum.php#reviews">My Reviews</a></li>
+                        <li><a href="usersprofile.php">My Profile</a></li>
+                        <li><a href="order.php">My Orders</a></li>
+                        <li><a href="review.php">My Reviews</a></li>
                         <li><a href="login.php?logout=1">Logout</a></li>
                     <?php endif; ?>
                 </ul>
@@ -265,8 +309,6 @@ if (isset($_POST['checkout'])) {
     </div>
 </header>
 
-
-            
     <main>
         <section id="cart-hero" class="page-hero">
             <div class="container">

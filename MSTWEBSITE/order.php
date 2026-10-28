@@ -1,138 +1,17 @@
 <?php
-session_start();
-include 'MSTDBConn.php';
 
-// Accept order_ref or order_id via GET or use last_order_* in session
-$order_ref = $_GET['ref'] ?? $_SESSION['last_order_ref'] ?? null;
-$order_id = isset($_GET['id']) ? (int)$_GET['id'] : ($_SESSION['last_order_id'] ?? null);
-
-$order = null;
-$items = [];
-
-// inspect orders table columns to find a suitable reference or id column
-$orderCols = [];
-$r = $conn->query("SHOW COLUMNS FROM orders");
-if ($r) {
-    while ($row = $r->fetch_assoc()) {
-        $orderCols[] = $row['Field'];
-    }
-    $r->free();
+declare(strict_types=1);
+require_once __DIR__ . '/account_shared.php';
+account_require_login();
+if (strtolower((string)($_SESSION['role'] ?? 'user')) === 'admin') { header('Location: admin_orders.php'); exit; }
+$userId=(int)$_SESSION['user_id']; account_header('My Orders','order.php');
+if(!account_table_exists($conn,'orders')) { ?><div class="empty-state"><h3>Your orders will appear here</h3><p>The orders table has not been created yet, or checkout has not been connected to save orders. See README.md for the expected schema.</p></div><?php }
+elseif(!account_column_exists($conn,'orders','user_id')) { account_flash('The orders table needs a user_id column to show each customer only their own orders.','error'); }
+else {
+    $hasStatus=account_column_exists($conn,'orders','status'); $hasTotal=account_column_exists($conn,'orders','total_amount'); $hasCreated=account_column_exists($conn,'orders','created_at');
+    $sql='SELECT order_id'.($hasStatus?',status':'').($hasTotal?',total_amount':'').($hasCreated?',created_at':'').' FROM orders WHERE user_id=? ORDER BY order_id DESC';
+    $stmt=$conn->prepare($sql); if($stmt){$stmt->bind_param('i',$userId);$stmt->execute();$result=$stmt->get_result();
+    if($result->num_rows===0){?><div class="empty-state"><h3>No orders yet</h3><p>When you place an order, you will be able to track it here.</p><a class="btn" href="index.php">Explore perfumes</a></div><?php}
+    else { ?><section class="panel"><h2>Order history</h2><div class="table-wrap"><table><thead><tr><th>Order number</th><?php if($hasCreated):?><th>Placed on</th><?php endif;?><?php if($hasTotal):?><th>Total</th><?php endif;?><?php if($hasStatus):?><th>Status</th><?php endif;?></tr></thead><tbody><?php while($o=$result->fetch_assoc()):?><tr><td>#<?=(int)$o['order_id']?></td><?php if($hasCreated):?><td><?=account_e($o['created_at'])?></td><?php endif;?><?php if($hasTotal):?><td>R<?=number_format((float)$o['total_amount'],2)?></td><?php endif;?><?php if($hasStatus):?><td><span class="badge"><?=account_e($o['status'])?></span></td><?php endif;?></tr><?php endwhile;?></tbody></table></div></section><?php } $stmt->close(); }
 }
-
-// find a ref-like column (order_ref, ref, reference)
-$refCol = null;
-$candidates = ['order_ref','orderReference','reference','ref','order_reference'];
-foreach ($candidates as $c) {
-    if (in_array($c, $orderCols)) { $refCol = $c; break; }
-}
-// fallback: any column containing 'ref'
-if (!$refCol) {
-    foreach ($orderCols as $c) {
-        if (stripos($c, 'ref') !== false) { $refCol = $c; break; }
-    }
-}
-
-// find id-like column
-$idCol = null;
-$idCandidates = ['id','order_id','orders_id','orderID','orderId'];
-foreach ($idCandidates as $c) {
-    if (in_array($c, $orderCols)) { $idCol = $c; break; }
-}
-
-// Try to load by reference if provided and column exists
-if ($order_ref && $refCol) {
-    $sql = "SELECT * FROM orders WHERE `$refCol` = ? LIMIT 1";
-    $s = $conn->prepare($sql);
-    if ($s) {
-        $s->bind_param('s', $order_ref);
-        $s->execute();
-        $res = $s->get_result();
-        $order = $res->fetch_assoc();
-        $s->close();
-        if ($order && !$order_id) {
-            $order_id = $order[$idCol] ?? $order['id'] ?? $order['order_id'] ?? null;
-        }
-    }
-}
-
-// If not found yet, try by id parameter or session id and id column
-if (!$order && $order_id && $idCol) {
-    $sql = "SELECT * FROM orders WHERE `$idCol` = ? LIMIT 1";
-    $s = $conn->prepare($sql);
-    if ($s) {
-        $s->bind_param('i', $order_id);
-        $s->execute();
-        $res = $s->get_result();
-        $order = $res->fetch_assoc();
-        $s->close();
-    }
-}
-
-// final fallback: if logged in, fetch last order for this user
-if (!$order && isset($_SESSION['user_id']) && $idCol) {
-    $uid = $_SESSION['user_id'];
-    if (in_array('user_id', $orderCols)) {
-        $s = $conn->prepare("SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC LIMIT 1");
-        if ($s) {
-            $s->bind_param('i', $uid);
-            $s->execute();
-            $res = $s->get_result();
-            $order = $res->fetch_assoc();
-            $s->close();
-            if ($order) $order_id = $order[$idCol] ?? $order['id'] ?? $order['order_id'] ?? null;
-        }
-    }
-}
-
-// if we have an order, fetch order items using detected id column
-if ($order) {
-    $oid = $order[$idCol] ?? $order['id'] ?? $order['order_id'] ?? null;
-    if ($oid) {
-        $it = $conn->prepare("SELECT * FROM order_items WHERE order_id = ?");
-        if ($it) {
-            $it->bind_param('i', $oid);
-            $it->execute();
-            $res = $it->get_result();
-            while ($row = $res->fetch_assoc()) $items[] = $row;
-            $it->close();
-        }
-    }
-}
-?>
-<!doctype html>
-<html>
-<head><meta charset="utf-8"><title>Order Details</title>
-<link rel="stylesheet" href="css/style.css">
-</head>
-<body>
-    <main class="container">
-        <h1>Order Details</h1>
-        <?php if (!$order): ?>
-            <p>No order found. Provide `?ref=ORDERREF` or `?id=ORDER_ID`, or place an order to see the confirmation.</p>
-        <?php else: ?>
-            <p><strong>Reference:</strong> <?=htmlspecialchars($order['order_ref'] ?? $order['ref'] ?? $order['reference'] ?? ($_SESSION['last_order_ref'] ?? ''))?></p>
-            <p><strong>Order ID:</strong> <?=htmlspecialchars($order['id'] ?? $order['order_id'] ?? '')?></p>
-            <p><strong>User:</strong> <?=htmlspecialchars($order['user_id'] ?? $order['customer_id'] ?? 'Guest')?></p>
-            <p><strong>Total:</strong> R<?=number_format((float)($order['total'] ?? $order['amount'] ?? 0),2)?></p>
-            <h2>Items</h2>
-            <?php if (empty($items)): ?>
-                <p>No items recorded for this order.</p>
-            <?php else: ?>
-                <table border="1" cellpadding="6">
-                    <thead><tr><th>Product</th><th>SKU/ID</th><th>Qty</th><th>Price</th></tr></thead>
-                    <tbody>
-                    <?php foreach ($items as $it): ?>
-                        <tr>
-                            <td><?=htmlspecialchars($it['product_name'] ?? $it['name'] ?? '')?></td>
-                            <td><?=htmlspecialchars($it['product_id'] ?? $it['sku'] ?? '')?></td>
-                            <td><?=htmlspecialchars($it['qty'] ?? $it['quantity'] ?? '')?></td>
-                            <td>R<?=number_format((float)($it['price'] ?? $it['unit_price'] ?? 0),2)?></td>
-                        </tr>
-                    <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php endif; ?>
-        <?php endif; ?>
-    </main>
-</body>
-</html>
+account_footer();
