@@ -43,10 +43,13 @@ class ProductAdapter(
             val userId = activeUser?.id ?: 1
 
             binding.apply {
-                tvProductName.text = "${product.name} (${product.size})"
-                tvRetailPrice.text = "Retail: ${currencyFormat.format(product.retailPrice)}"
+                tvProductName.text = product.name
+                tvRetailPrice.text = currencyFormat.format(product.retailPrice)
                 tvBulkPrice.text = "Bulk: ${currencyFormat.format(product.bulkPrice)}"
                 tvScentProfile.text = product.scentProfile
+
+                val reviewsCount = (product.id * 3 + 1) % 10 + 1
+                tvReviews.text = "$reviewsCount ${if (reviewsCount == 1) "review" else "reviews"} ⭐"
 
                 if (!product.imageUri.isNullOrEmpty()) {
                     com.bumptech.glide.Glide.with(context)
@@ -75,6 +78,10 @@ class ProductAdapter(
                     )
                     val msg = if (inWishlist) "${product.name} added to Wishlist ❤️" else "${product.name} removed from Wishlist"
                     android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
+                }
+
+                btnQuickAddOverlay.setOnClickListener {
+                    onAddToCart(product)
                 }
 
                 btnAddToCart.setOnClickListener {

@@ -35,6 +35,16 @@ class ProductsFragment : Fragment() {
         setupSearch()
     }
 
+    private fun calculateSpanCount(): Int {
+        val displayMetrics = resources.displayMetrics
+        val screenWidthDp = displayMetrics.widthPixels / displayMetrics.density
+        return when {
+            screenWidthDp >= 900 -> 4
+            screenWidthDp >= 500 -> 3
+            else -> 2
+        }
+    }
+
     private fun setupProductGrids() {
         val mainActivity = activity as? MainActivity
         val menProducts = ProductRepository.getMenProducts()
@@ -50,11 +60,15 @@ class ProductsFragment : Fragment() {
             Toast.makeText(requireContext(), "${product.name} added to cart", Toast.LENGTH_SHORT).show()
         }
 
-        binding.rvMenProducts.layoutManager = GridLayoutManager(requireContext(), 2)
-        binding.rvMenProducts.adapter = menAdapter
+        val spanCount = calculateSpanCount()
 
-        binding.rvWomenProducts.layoutManager = GridLayoutManager(requireContext(), 2)
+        binding.rvMenProducts.layoutManager = GridLayoutManager(requireContext(), spanCount)
+        binding.rvMenProducts.adapter = menAdapter
+        binding.rvMenProducts.isNestedScrollingEnabled = false
+
+        binding.rvWomenProducts.layoutManager = GridLayoutManager(requireContext(), spanCount)
         binding.rvWomenProducts.adapter = womenAdapter
+        binding.rvWomenProducts.isNestedScrollingEnabled = false
     }
 
     private fun setupSearch() {
