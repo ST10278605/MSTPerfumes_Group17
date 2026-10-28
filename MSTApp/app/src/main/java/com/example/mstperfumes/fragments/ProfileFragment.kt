@@ -65,9 +65,6 @@ class ProfileFragment : Fragment() {
 
     private fun setupUserHeader() {
         val user = getLoggedInUser()
-        val sharedPrefs = requireContext().getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE)
-        val authProvider = sharedPrefs.getString("authProvider", "Local_Credentials") ?: "Local_Credentials"
-        val firebaseUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
 
         val name = user?.name ?: "Guest User"
         val email = user?.email ?: "user@mstperfumes.com"
@@ -77,18 +74,6 @@ class ProfileFragment : Fragment() {
         binding.tvDetailName.text = "Full Name: $name"
         binding.tvDetailEmail.text = "Email: $email"
         binding.tvDetailRegisteredDate.text = "Registered: $regDate"
-
-        val isGoogleUser = authProvider.contains("Google", ignoreCase = true) ||
-                           authProvider.contains("SSO", ignoreCase = true) ||
-                           firebaseUser != null ||
-                           email.endsWith("@gmail.com", ignoreCase = true)
-
-        if (isGoogleUser) {
-            binding.tvAuthProvider.visibility = View.VISIBLE
-            binding.tvAuthProvider.text = "🛡️ Authentication: Google Sign-In (Verified Secure)"
-        } else {
-            binding.tvAuthProvider.visibility = View.GONE
-        }
     }
 
     private fun setupRecyclerViews() {
