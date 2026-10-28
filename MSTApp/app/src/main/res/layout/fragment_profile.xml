@@ -75,17 +75,6 @@
                     android:textColor="#333333"
                     android:textSize="14sp" />
 
-            <TextView
-                android:id="@+id/tabHelp"
-                android:id="@+id/tabSettings"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="?attr/selectableItemBackground"
-                android:paddingVertical="12dp"
-                android:text="❓  Help &amp; Support"
-                android:text="⚙️  Settings"
-                android:textColor="#333333"
-                android:textSize="14sp" />
                 <TextView
                     android:id="@+id/tabOrders"
                     android:layout_width="match_parent"
