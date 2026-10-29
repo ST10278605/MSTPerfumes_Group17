@@ -40,8 +40,8 @@ class LoginActivity : AppCompatActivity() {
     private val googleSignInLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode != RESULT_OK || result.data == null) {
-            loginAsGoogleFallback()
+        if (result.resultCode != RESULT_OK) {
+            Toast.makeText(this, "Google Sign-In cancelled", Toast.LENGTH_SHORT).show()
             return@registerForActivityResult
         }
 
@@ -67,8 +67,14 @@ class LoginActivity : AppCompatActivity() {
             } else {
                 loginAsGoogleFallback(name, email)
             }
+        } catch (e: ApiException) {
+            if (e.statusCode == GoogleSignInStatusCodes.SIGN_IN_CANCELLED) {
+                Toast.makeText(this, "Google Sign-In cancelled", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Google Sign-In failed (${e.statusCode}): ${e.message}", Toast.LENGTH_SHORT).show()
+            }
         } catch (e: Exception) {
-            loginAsGoogleFallback()
+            Toast.makeText(this, "Google Sign-In error: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -118,20 +124,14 @@ class LoginActivity : AppCompatActivity() {
             }
         }
 
-        // Google SSO Button Listener: Clears cached account so user gets account selection popup
         binding.btnGoogleSso.setOnClickListener {
             val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken("903484852623-sac3umuredd699fbk0bbn12hvkjn8qui.apps.googleusercontent.com")
                 .requestEmail()
                 .build()
             val googleSignInClient = GoogleSignIn.getClient(this, gso)
 
             googleSignInClient.signOut().addOnCompleteListener {
-                try {
-                    googleSignInLauncher.launch(googleSignInClient.signInIntent)
-                } catch (e: Exception) {
-                    loginAsGoogleFallback()
-                }
+                googleSignInLauncher.launch(googleSignInClient.signInIntent)
             }
         }
 
