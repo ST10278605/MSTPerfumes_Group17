@@ -125,8 +125,13 @@ class MainActivity : AppCompatActivity() {
 
             val sharedPrefs = getSharedPreferences("UserPrefs", MODE_PRIVATE)
             val activeUser = com.example.mstperfumes.data.UserRepository.getActiveUser()
-            val userName = activeUser?.name ?: sharedPrefs.getString("userName", "Guest User")
-            val userEmail = activeUser?.email ?: sharedPrefs.getString("userEmail", "user@mstperfumes.com")
+            val userName = activeUser?.name
+                ?: sharedPrefs.getString("userName", null)
+                ?: sharedPrefs.getString("fullName", null)
+                ?: activeUser?.email
+                ?: sharedPrefs.getString("userEmail", null)
+                ?: "Valued Member"
+            val userEmail = activeUser?.email ?: sharedPrefs.getString("userEmail", "user@mstperfumes.com") ?: "user@mstperfumes.com"
 
             tvNavUserName?.text = "Welcome, $userName"
             tvNavUserEmail?.text = userEmail

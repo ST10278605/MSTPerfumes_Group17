@@ -38,15 +38,16 @@ class HomeFragment : Fragment() {
     }
 
     private fun updateWelcomeHeader() {
+        val activeUser = com.example.mstperfumes.data.UserRepository.getActiveUser()
         val sharedPrefs = requireContext().getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE)
-        val userName = sharedPrefs.getString("userName", null)
+        val userName = activeUser?.name
+            ?: sharedPrefs.getString("userName", null)
             ?: sharedPrefs.getString("fullName", null)
+            ?: activeUser?.email
+            ?: sharedPrefs.getString("userEmail", null)
+            ?: "Valued Member"
 
-        if (!userName.isNullOrEmpty()) {
-            binding.tvWelcomeUser.text = "Hi $userName, welcome to MST perfumes of the future"
-        } else {
-            binding.tvWelcomeUser.text = "Hi, welcome to MST perfumes of the future"
-        }
+        binding.tvWelcomeUser.text = "Hi $userName, welcome to MST perfumes of the future"
     }
 
     private fun setupTestimonials() {

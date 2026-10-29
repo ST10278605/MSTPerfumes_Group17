@@ -65,9 +65,14 @@ class ProfileFragment : Fragment() {
 
     private fun setupUserHeader() {
         val user = getLoggedInUser()
-
-        val name = user?.name ?: "Guest User"
-        val email = user?.email ?: "user@mstperfumes.com"
+        val sharedPrefs = requireContext().getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE)
+        val name = user?.name
+            ?: sharedPrefs.getString("userName", null)
+            ?: sharedPrefs.getString("fullName", null)
+            ?: user?.email
+            ?: sharedPrefs.getString("userEmail", null)
+            ?: "Valued Member"
+        val email = user?.email ?: sharedPrefs.getString("userEmail", "user@mstperfumes.com") ?: "user@mstperfumes.com"
         val regDate = user?.registeredDate ?: "2024-11-01"
 
         binding.tvProfileHeaderGreeting.text = "Hi, $name!"

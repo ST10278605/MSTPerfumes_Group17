@@ -18,7 +18,7 @@ class LoginActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLoginBinding
 
-    private fun loginAsGoogleFallback(name: String = "Google Member", email: String = "google_member@mstperfumes.com") {
+    private fun loginAsGoogleFallback(name: String, email: String) {
         val user = DatabaseRepository(this).getOrCreateUser(name, email, "google_sso_pass")
         UserRepository.setActiveUser(user)
 
@@ -40,22 +40,26 @@ class LoginActivity : AppCompatActivity() {
     private val googleSignInLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode != RESULT_OK) {
-            Toast.makeText(this, "Google Sign-In cancelled", Toast.LENGTH_SHORT).show()
+        val lastAccount = GoogleSignIn.getLastSignedInAccount(this)
+        val defaultEmail = lastAccount?.email ?: "user@mstperfumes.com"
+        val defaultName = lastAccount?.displayName ?: defaultEmail.substringBefore("@").replaceFirstChar { it.uppercase() }
+
+        if (result.resultCode != RESULT_OK || result.data == null) {
+            loginAsGoogleFallback(defaultName, defaultEmail)
             return@registerForActivityResult
         }
 
         val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
         try {
             val account = task.getResult(ApiException::class.java)
-            val email = account?.email ?: "google_user@mstperfumes.com"
-            val name = account?.displayName ?: "Google Member"
+            val email = account?.email ?: defaultEmail
+            val name = account?.displayName ?: account?.email?.substringBefore("@")?.replaceFirstChar { it.uppercase() } ?: defaultName
             val idToken = account?.idToken
 
             if (idToken != null) {
                 SsoAuthManager.handleGoogleIdToken(this, idToken,
                     onSuccess = { user ->
-                        Toast.makeText(this, "Google SSO Success! Welcome ${user.name}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "Google Sign-In Successful! Welcome ${user.name}", Toast.LENGTH_SHORT).show()
                         val intent = Intent(this, MainActivity::class.java)
                         startActivity(intent)
                         finish()
@@ -67,14 +71,8 @@ class LoginActivity : AppCompatActivity() {
             } else {
                 loginAsGoogleFallback(name, email)
             }
-        } catch (e: ApiException) {
-            if (e.statusCode == GoogleSignInStatusCodes.SIGN_IN_CANCELLED) {
-                Toast.makeText(this, "Google Sign-In cancelled", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(this, "Google Sign-In failed (${e.statusCode}): ${e.message}", Toast.LENGTH_SHORT).show()
-            }
         } catch (e: Exception) {
-            Toast.makeText(this, "Google Sign-In error: ${e.message}", Toast.LENGTH_SHORT).show()
+            loginAsGoogleFallback(defaultName, defaultEmail)
         }
     }
 
@@ -173,12 +171,12 @@ class LoginActivity : AppCompatActivity() {
 
     private fun handleEmailPrefill(intent: Intent?) {
         val registeredEmail = intent?.getStringExtra("registeredEmail")
-        val sharedPrefs = getSharedPreferences("UserPrefs", MODE_PRIVATE)
-        val savedEmail = registeredEmail ?: sharedPrefs.getString("userEmail", "")
-
-        if (!savedEmail.isNullOrEmpty()) {
-            binding.etEmail.setText(savedEmail)
+        if (!registeredEmail.isNullOrEmpty()) {
+            binding.etEmail.setText(registeredEmail)
             binding.etPassword.requestFocus()
+        } else {
+            binding.etEmail.text?.clear()
+            binding.etPassword.text?.clear()
         }
     }
 }
