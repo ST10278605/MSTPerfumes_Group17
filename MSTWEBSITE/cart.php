@@ -2,49 +2,233 @@
 session_start();
 include "MSTDBConn.php";
 
-$isLoggedIn = isset($_SESSION["user_id"]);
-$username = $isLoggedIn ? htmlspecialchars($_SESSION["name"] ?? $_SESSION["username"] ?? 'User') : null;
-
-$cartCount = 0;
-if (isset($_SESSION["cart"]) && is_array($_SESSION["cart"])) {
-    $cartCount = array_sum($_SESSION["cart"]);
+function e(mixed $value): string
+{
+    return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 }
 
-// products map (same ids as shopping.php)
+function getUserCartId(mysqli $conn, int $userId): ?int
+{
+    $stmt = $conn->prepare('SELECT cart_id FROM carts WHERE user_id = ? LIMIT 1');
+    if (!$stmt) {
+        return null;
+    }
+
+    $stmt->bind_param('i', $userId);
+    if (!$stmt->execute()) {
+        $stmt->close();
+        return null;
+    }
+
+    $result = $stmt->get_result();
+    $row = $result ? $result->fetch_assoc() : null;
+    $stmt->close();
+
+    if ($row && isset($row['cart_id'])) {
+        return (int) $row['cart_id'];
+    }
+
+    $insert = $conn->prepare('INSERT INTO carts (user_id) VALUES (?)');
+    if (!$insert) {
+        return null;
+    }
+
+    $insert->bind_param('i', $userId);
+    if (!$insert->execute()) {
+        $insert->close();
+        return null;
+    }
+
+    $cartId = (int) $conn->insert_id;
+    $insert->close();
+    return $cartId;
+}
+
+function syncSessionCartToDatabase(mysqli $conn, int $userId): void
+{
+    if (!isset($_SESSION['cart']) || !is_array($_SESSION['cart'])) {
+        $_SESSION['cart'] = [];
+    }
+
+    $cartId = getUserCartId($conn, $userId);
+    if ($cartId === null) {
+        return;
+    }
+
+    $deleteStmt = $conn->prepare('DELETE FROM cart_items WHERE cart_id = ?');
+    if (!$deleteStmt) {
+        return;
+    }
+
+    $deleteStmt->bind_param('i', $cartId);
+    $deleteStmt->execute();
+    $deleteStmt->close();
+
+    if (empty($_SESSION['cart'])) {
+        return;
+    }
+
+    $insertStmt = $conn->prepare('INSERT INTO cart_items (cart_id, product_id, quantity) VALUES (?, ?, ?)');
+    if (!$insertStmt) {
+        return;
+    }
+
+    foreach ($_SESSION['cart'] as $pid => $qty) {
+        $productId = filter_var($pid, FILTER_VALIDATE_INT);
+        if ($productId === false || $productId < 1) {
+            continue;
+        }
+
+        $quantity = max(1, (int) $qty);
+        $insertStmt->bind_param('iii', $cartId, $productId, $quantity);
+        $insertStmt->execute();
+    }
+
+    $insertStmt->close();
+}
+
+$isLoggedIn = isset($_SESSION["user_id"]);
+$userRole = strtolower((string) ($_SESSION['role'] ?? 'user'));
+$isAdmin = $isLoggedIn && $userRole === 'admin';
+$filter = $_GET['filter'] ?? 'all';
+$userName = $isLoggedIn ? htmlspecialchars($_SESSION["name"] ?? $_SESSION["username"] ?? 'User') : null;
+
+if (!isset($_SESSION['cart']) || !is_array($_SESSION['cart'])) {
+    $_SESSION['cart'] = [];
+}
+
+if ($isLoggedIn) {
+    $cartDb = [];
+    $stmt = $conn->prepare('SELECT ci.product_id, ci.quantity FROM carts c INNER JOIN cart_items ci ON ci.cart_id = c.cart_id WHERE c.user_id = ?');
+    if ($stmt) {
+        $stmt->bind_param('i', $_SESSION['user_id']);
+        if ($stmt->execute()) {
+            $result = $stmt->get_result();
+            while ($result && ($row = $result->fetch_assoc())) {
+                $pid = (string) $row['product_id'];
+                $cartDb[$pid] = (int) $row['quantity'];
+            }
+        }
+        $stmt->close();
+    }
+
+    if (!empty($cartDb)) {
+        $_SESSION['cart'] = $cartDb;
+    }
+}
+
+$cartCount = array_sum($_SESSION['cart']);
+
+function resolveProductImage(string $imagePath, string $fallback = 'pictures/perfume.jpeg'): string
+{
+    $imagePath = trim($imagePath);
+    if ($imagePath === '') {
+        return $fallback;
+    }
+
+    if (preg_match('#^https?://#i', $imagePath)) {
+        return $imagePath;
+    }
+
+    $imagePath = preg_replace('/\.(jpe?g)$/i', '.jpeg', $imagePath);
+
+    if (strpos($imagePath, 'pictures/') === 0) {
+        if (file_exists(__DIR__ . '/' . $imagePath)) {
+            return $imagePath;
+        }
+
+        $baseName = basename($imagePath);
+        if (file_exists(__DIR__ . '/pictures/' . $baseName)) {
+            return 'pictures/' . $baseName;
+        }
+
+        return $fallback;
+    }
+
+    if (file_exists(__DIR__ . '/pictures/' . $imagePath)) {
+        return 'pictures/' . $imagePath;
+    }
+
+    if (file_exists(__DIR__ . '/' . $imagePath)) {
+        return $imagePath;
+    }
+
+    $baseName = basename($imagePath);
+    if ($baseName !== '' && file_exists(__DIR__ . '/pictures/' . $baseName)) {
+        return 'pictures/' . $baseName;
+    }
+
+    return $fallback;
+}
+
+// products map. Prefer the real database product ids and keep the legacy p1..p12 map as fallback.
 $products = [
-    'p1' => ['name' => 'Amen (60ml)', 'price' => 160, 'img' => 'pictures/product.JPEG'],
-    'p2' => ['name' => 'Silver Sent Intense (50ml)', 'price' => 140, 'img' => 'pictures/product1.JPEG'],
-    'p3' => ['name' => 'Hugo Boss (50ml)', 'price' => 140, 'img' => 'pictures/product2.JPEG'],
-    'p4' => ['name' => 'Dunhill Desire Red (50ml)', 'price' => 140, 'img' => 'pictures/product3.JPEG'],
-    'p5' => ['name' => 'Dunhill Desire Blue (50ml)', 'price' => 140, 'img' => 'pictures/product4.JPEG'],
-    'p6' => ['name' => 'One Million (50ml)', 'price' => 140, 'img' => 'pictures/product5.JPEG'],
-    'p7' => ['name' => 'Coco Mademoiselle (50ml)', 'price' => 180, 'img' => 'pictures/product6.JPEG'],
-    'p8' => ['name' => 'Lady Million (50ml)', 'price' => 140, 'img' => 'pictures/product7.JPEG'],
-    'p9' => ['name' => 'Scandal (50ml)', 'price' => 140, 'img' => 'pictures/product8.JPEG'],
-    'p10' => ['name' => 'Red Door (50ml)', 'price' => 140, 'img' => 'pictures/product9.JPEG'],
-    'p11' => ['name' => 'Far Away (50ml)', 'price' => 140, 'img' => 'pictures/product10.JPEG'],
-    'p12' => ['name' => 'La vie est belle (50ml)', 'price' => 140, 'img' => 'pictures/product11.JPEG'],
+    'p1' => ['name' => 'Amen (60ml)', 'price' => 160, 'img' => resolveProductImage('pictures/perfume.jpeg')],
+    'p2' => ['name' => 'Silver Sent Intense (50ml)', 'price' => 140, 'img' => resolveProductImage('pictures/perfume1.jpeg')],
+    'p3' => ['name' => 'Hugo Boss (50ml)', 'price' => 140, 'img' => resolveProductImage('pictures/perfume2.jpeg')],
+    'p4' => ['name' => 'Dunhill Desire Red (50ml)', 'price' => 140, 'img' => resolveProductImage('pictures/perfume3.jpeg')],
+    'p5' => ['name' => 'Dunhill Desire Blue (50ml)', 'price' => 140, 'img' => resolveProductImage('pictures/perfume4.jpeg')],
+    'p6' => ['name' => 'One Million (50ml)', 'price' => 140, 'img' => resolveProductImage('pictures/perfume5.jpeg')],
+    'p7' => ['name' => 'Coco Mademoiselle (50ml)', 'price' => 180, 'img' => resolveProductImage('pictures/perfume6.jpeg')],
+    'p8' => ['name' => 'Lady Million (50ml)', 'price' => 140, 'img' => resolveProductImage('pictures/perfume7.jpeg')],
+    'p9' => ['name' => 'Scandal (50ml)', 'price' => 140, 'img' => resolveProductImage('pictures/perfume8.jpeg')],
+    'p10' => ['name' => 'Red Door (50ml)', 'price' => 140, 'img' => resolveProductImage('pictures/perfume9.jpeg')],
+    'p11' => ['name' => 'Far Away (50ml)', 'price' => 140, 'img' => resolveProductImage('pictures/perfume10.jpeg')],
+    'p12' => ['name' => 'La vie est belle (50ml)', 'price' => 140, 'img' => resolveProductImage('pictures/perfume11.jpeg')],
 ];
+
+$productResult = $conn->query('SELECT product_id, name, price, image FROM products ORDER BY product_id');
+if ($productResult) {
+    while ($row = $productResult->fetch_assoc()) {
+        $id = (string) $row['product_id'];
+        $imageValue = (string) ($row['image'] ?? '');
+        $resolvedImage = resolveProductImage($imageValue, 'pictures/perfume.jpeg');
+
+        $products[$id] = [
+            'name' => (string) ($row['name'] ?? $id),
+            'price' => (float) ($row['price'] ?? 0),
+            'img' => $resolvedImage,
+        ];
+        $products['p' . $id] = $products[$id];
+    }
+    $productResult->free();
+}
 
 // Actions: remove, update quantities, checkout
 if (isset($_GET['remove'])) {
-    $pid = $_GET['remove'];
+    $pid = (string) $_GET['remove'];
+    $pidInt = filter_var($pid, FILTER_VALIDATE_INT);
+
     if (isset($_SESSION['cart'][$pid])) {
         unset($_SESSION['cart'][$pid]);
     }
+
+    if ($pidInt !== false && isset($_SESSION['cart'][(string) $pidInt])) {
+        unset($_SESSION['cart'][(string) $pidInt]);
+    }
+
+    if ($isLoggedIn) {
+        syncSessionCartToDatabase($conn, (int) $_SESSION['user_id']);
+    }
+
     header('Location: cart.php');
     exit();
 }
 
 if (isset($_POST['update_qty'])) {
     foreach ($_POST['qty'] ?? [] as $pid => $q) {
-        $q = (int)$q;
+        $q = (int) $q;
         if ($q <= 0) {
             unset($_SESSION['cart'][$pid]);
         } else {
             $_SESSION['cart'][$pid] = $q;
         }
     }
+
+    if ($isLoggedIn) {
+        syncSessionCartToDatabase($conn, (int) $_SESSION['user_id']);
+    }
+
     header('Location: cart.php');
     exit();
 }
@@ -178,7 +362,7 @@ if (isset($_POST['checkout'])) {
             if (isset($order_id)) $_SESSION['last_order_id'] = $order_id;
             $checkoutMessage = "Order placed. Reference: $order_ref";
         }
-        
+
     }
 }
 
@@ -190,7 +374,9 @@ if (isset($_POST['checkout'])) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/account.css">
     <title>MST PERFUMES | CART</title>
+    <link rel="icon" type="image/x-icon" href="pictures/logo.svg">
 
 </head>
 
@@ -199,45 +385,49 @@ if (isset($_POST['checkout'])) {
 
 <div class="top-bar">
     <span><i class="fas fa-star" aria-hidden="true"></i> Discover your next signature scent</span>
-    <span>Free shipping on orders over R600</span>
+    <span>Free delivery on orders over R600</span>
 </div>
 
-<header class="site-header">
-    <div class="site-header__inner">
-        <a class="brand" href="index.php" aria-label="MST Perfumes home">
-            <img src="pictures/logo.png" alt="MST Perfumes logo">
-        </a>
+<div class="account-topline">
+    MST PERFUMES <span>•</span> A fragrance that feels like you
+</div>
 
-        <nav class="site-nav" aria-label="Main navigation">
-            <a href="index.php" class="<?= $filter === 'all' ? 'is-current' : '' ?>">Shop All</a>
+<header class="account-header">
+    <a class="account-brand" href="index.php" aria-label="MST Perfumes home">
+        <span class="brand-mark">M</span>
+        <span>
+            <strong>MST PERFUMES</strong>
+            <small>THE ART OF FRAGRANCE</small>
+        </span>
+    </a>
 
-            <div class="nav-dropdown">
-                <button class="nav-dropdown__toggle" type="button" aria-expanded="false" aria-controls="shop-menu">
-                    Shop by scent <i class="fas fa-chevron-down" aria-hidden="true"></i>
-                </button>
-                <ul class="nav-dropdown__menu" id="shop-menu">
-                    <li><a href="index.php?filter=male">Men's Perfume</a></li>
-                    <li><a href="index.php?filter=female">Women's Perfume</a></li>
-                    <li><a href="index.php?filter=unisex">Unisex Perfume</a></li>
-                </ul>
-            </div>
+    <nav class="account-nav" aria-label="Main navigation">
+        <a href="index.php" class="active">Shop</a>
+        <a href="index.php?filter=male">Men's Perfume</a>
+        <a href="index.php?filter=female">Women's Perfume</a>
+        <a href="index.php?filter=unisex">Unisex Perfume</a>
+        <a href="review.php">Reviews</a>
+        <a href="contact-us.php">Contact Us</a>
+    </nav>
 
-            <a href="forum.php#reviews">Reviews</a>
-            <a href="#contact-us">Contact Us</a>
-        </nav>
-
-        <div class="account">
-            <?php if ($isLoggedIn): ?>
-                <span class="account__name">Hi, <?= e($userName) ?></span>
-            <?php else: ?>
-                <a class="btn btn-ghost" href="login.php">Login</a>
-            <?php endif; ?>
+    <div class="account account-tools">
+        <?php if ($isLoggedIn): ?>
+            <span class="account__name">
+                Hi, <?= e($userName) ?>
+            </span>
 
             <div class="nav-dropdown account-dropdown">
-                <button class="nav-dropdown__toggle" type="button" aria-expanded="false" aria-controls="profile-menu">
-                    <i class="fas fa-user-circle" aria-hidden="true"></i> Profile
+                <button
+                    class="nav-dropdown__toggle"
+                    type="button"
+                    aria-expanded="false"
+                    aria-controls="profile-menu"
+                >
+                    <i class="fas fa-user-circle" aria-hidden="true"></i>
+                    My Account
                     <i class="fas fa-chevron-down" aria-hidden="true"></i>
                 </button>
+
                 <ul class="nav-dropdown__menu" id="profile-menu">
                     <?php if (!$isLoggedIn): ?>
                         <li><a href="login.php">Login</a></li>
@@ -245,28 +435,26 @@ if (isset($_POST['checkout'])) {
                     <?php elseif ($isAdmin): ?>
                         <li><a href="profile.php">My Profile</a></li>
                         <li><a href="admin_dashboard.php">Admin Dashboard</a></li>
-                        <li><a href="admin_products.php">Manage Products</a></li>
-                        <li><a href="admin_orders.php">Manage Orders</a></li>
                         <li><a href="login.php?logout=1">Logout</a></li>
                     <?php else: ?>
-                        <li><a href="profile.php">My Profile</a></li>
-                        <li><a href="my_orders.php">My Orders</a></li>
-                        <li><a href="forum.php#reviews">My Reviews</a></li>
+                        <li><a href="usersprofile.php">My Profile</a></li>
+                        <li><a href="order.php">My Orders</a></li>
+                        <li><a href="review.php">My Reviews</a></li>
                         <li><a href="login.php?logout=1">Logout</a></li>
                     <?php endif; ?>
                 </ul>
             </div>
+        <?php else: ?>
+            <a class="btn btn-ghost" href="login.php">Login</a>
+        <?php endif; ?>
 
-            <a href="cart.php" aria-label="Shopping cart, <?= $cartCount ?> items">
-                <i class="fas fa-shopping-bag" aria-hidden="true"></i>
-                <span class="cart-count"><?= $cartCount ?></span>
-            </a>
-        </div>
+        <a href="cart.php" aria-label="Shopping cart, <?= $cartCount ?> items">
+            <i class="fas fa-shopping-bag" aria-hidden="true"></i>
+            <span class="cart-count"><?= $cartCount ?></span>
+        </a>
     </div>
 </header>
 
-
-            
     <main>
         <section id="cart-hero" class="page-hero">
             <div class="container">
@@ -291,13 +479,15 @@ if (isset($_POST['checkout'])) {
                             $lineTotal = $p['price'] * $qty;
                             $subtotal += $lineTotal;
                         ?>
-                        <article class="cart-item">
+                        <article class="cart-item" data-price="<?= (float) $p['price'] ?>">
                             <img src="<?= htmlspecialchars($p['img']) ?>" alt="<?= htmlspecialchars($p['name']) ?>">
                             <div class="item-details">
                                 <h3><?= htmlspecialchars($p['name']) ?></h3>
-                                <p class="item-price">R<?= number_format($p['price'], 2) ?> x <?= $qty ?> = R<?= number_format($lineTotal, 2) ?></p>
+                                <p class="item-price">R<?= number_format($p['price'], 2) ?> x <span class="item-qty-label"><?= $qty ?></span> = R<span class="line-total"><?= number_format($lineTotal, 2) ?></span></p>
                                 <div class="item-quantity">
-                                    <input type="number" name="qty[<?= htmlspecialchars($pid) ?>]" value="<?= (int)$qty ?>" min="0">
+                                    <button type="button" class="qty-btn" data-product-id="<?= e($pid) ?>" data-change="-1" aria-label="Decrease quantity">-</button>
+                                    <input type="number" name="qty[<?= htmlspecialchars($pid) ?>]" value="<?= (int)$qty ?>" min="0" inputmode="numeric" aria-label="Quantity for <?= htmlspecialchars($p['name']) ?>" class="cart-qty-input">
+                                    <button type="button" class="qty-btn" data-product-id="<?= e($pid) ?>" data-change="1" aria-label="Increase quantity">+</button>
                                 </div>
                             </div>
                             <a class="remove-item" href="cart.php?remove=<?= urlencode($pid) ?>">Remove</a>
@@ -317,9 +507,9 @@ if (isset($_POST['checkout'])) {
                     <h3>Cart Summary</h3>
                     <?php if (!empty($_SESSION['cart'])): ?>
                         <?php $shipping = 100; $total = ($subtotal ?? 0) + $shipping; ?>
-                        <p>Subtotal: R<?= number_format($subtotal, 2) ?></p>
+                        <p>Subtotal: R<span id="cart-subtotal"><?= number_format($subtotal, 2) ?></span></p>
                         <p>Shipping: R<?= number_format($shipping, 2) ?></p>
-                        <p>Total: R<?= number_format($total, 2) ?></p>
+                        <p>Total: R<span id="cart-total"><?= number_format($total, 2) ?></span></p>
                         <form method="post">
                             <button type="submit" name="checkout" class="btn-primary checkout">Checkout</button>
                         </form>
@@ -335,6 +525,71 @@ if (isset($_POST['checkout'])) {
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="js/Script1.js"></script>
+    <script>
+        document.addEventListener('click', function (event) {
+            const button = event.target.closest('.qty-btn');
+            if (!button) {
+                return;
+            }
+
+            const parent = button.closest('.item-quantity');
+            const input = parent ? parent.querySelector('input[type="number"]') : null;
+            if (!input) {
+                return;
+            }
+
+            const currentValue = parseInt(input.value, 10) || 0;
+            const change = parseInt(button.dataset.change || '0', 10);
+            const nextValue = Math.max(0, currentValue + change);
+            input.value = nextValue;
+            updateCartSummary();
+        });
+
+        document.addEventListener('input', function (event) {
+            if (!event.target.classList.contains('cart-qty-input')) {
+                return;
+            }
+            updateCartSummary();
+        });
+
+        function updateCartSummary() {
+            const itemCards = document.querySelectorAll('.cart-item');
+            let subtotal = 0;
+
+            itemCards.forEach(function (card) {
+                const price = parseFloat(card.dataset.price || '0');
+                const qtyInput = card.querySelector('.cart-qty-input');
+                const quantity = Math.max(0, parseInt(qtyInput ? qtyInput.value : '0', 10) || 0);
+                const lineTotal = price * quantity;
+
+                const label = card.querySelector('.item-qty-label');
+                if (label) {
+                    label.textContent = quantity;
+                }
+
+                const lineTotalEl = card.querySelector('.line-total');
+                if (lineTotalEl) {
+                    lineTotalEl.textContent = lineTotal.toFixed(2);
+                }
+
+                const itemPrice = card.querySelector('.item-price');
+                if (itemPrice) {
+                    itemPrice.innerHTML = 'R' + price.toFixed(2) + ' x <span class="item-qty-label">' + quantity + '</span> = R<span class="line-total">' + lineTotal.toFixed(2) + '</span>';
+                }
+
+                subtotal += lineTotal;
+            });
+
+            const shipping = <?= !empty($_SESSION['cart']) ? 100 : 0 ?>;
+            const total = subtotal + shipping;
+
+            const subtotalEl = document.getElementById('cart-subtotal');
+            const totalEl = document.getElementById('cart-total');
+
+            if (subtotalEl) subtotalEl.textContent = subtotal.toFixed(2);
+            if (totalEl) totalEl.textContent = total.toFixed(2);
+        }
+    </script>
 
     <footer>
         <h1 class="footer-brand">MST PERFUMES</h1>

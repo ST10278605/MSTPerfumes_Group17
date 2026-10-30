@@ -1,506 +1,148 @@
 <?php
+declare(strict_types=1);
+require_once __DIR__ . '/account_shared.php';
+$userId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : 0;
+$message = '';
+$error = '';
 
-session_start();
-
-/*
-|--------------------------------------------------------------------------
-| USER SESSION
-|--------------------------------------------------------------------------
-*/
-
-// Check if the user is logged in
-$isLoggedIn = isset($_SESSION["user_id"]);
-
-// Get the user's name
-$username = null;
-
-if ($isLoggedIn) {
-    $username = htmlspecialchars(
-        $_SESSION["name"] ?? "User",
-        ENT_QUOTES,
-        "UTF-8"
-    );
+if (!account_table_exists($conn,'reviews')) {
+    account_header('Reviews','review.php');
+    ?><div class="empty-state"><h3>Reviews are not set up yet</h3><p>Create the reviews table using the schema in README.md to let customers share fragrance feedback.</p></div><?php
+    account_footer();
+    exit;
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (empty($_SESSION['user_id'])) {
+        header('Location: login.php?redirect=' . rawurlencode('review.php'));
+        exit;
+    }
 
-/*
-|--------------------------------------------------------------------------
-| CART
-|--------------------------------------------------------------------------
-*/
-
-// Default cart count
-$cartCount = 0;
-
-// Check whether the session cart exists
-if (
-    isset($_SESSION["cart"]) &&
-    is_array($_SESSION["cart"])
-) {
-    $cartCount = array_sum($_SESSION["cart"]);
+    account_check_csrf();
+    $productId = filter_input(INPUT_POST,'product_id',FILTER_VALIDATE_INT);
+    $rating = filter_input(INPUT_POST,'rating',FILTER_VALIDATE_INT);
+    $comment = trim((string)($_POST['comment'] ?? ''));
+    if (!$productId || !$rating || $rating < 1 || $rating > 5 || $comment === '') {
+        $error = 'Choose a perfume, select a rating from 1 to 5, and write a comment.';
+    } else {
+        $stmt = $conn->prepare('SELECT product_id FROM products WHERE product_id = ? LIMIT 1');
+        $exists = false;
+        if ($stmt) {
+            $stmt->bind_param('i', $productId);
+            $stmt->execute();
+            $exists = (bool) $stmt->get_result()->fetch_assoc();
+            $stmt->close();
+        }
+        if (!$exists) {
+            $error = 'That perfume could not be found.';
+        } else {
+            $hasUser = account_column_exists($conn,'reviews','user_id');
+            $hasComment = account_column_exists($conn,'reviews','comment');
+            if (!$hasUser || !$hasComment) {
+                $error = 'The reviews table needs user_id and comment columns. See README.md.';
+            } else {
+                $stmt = $conn->prepare('INSERT INTO reviews (product_id, user_id, rating, comment) VALUES (?, ?, ?, ?)');
+                if ($stmt) {
+                    $stmt->bind_param('iiis', $productId, $userId, $rating, $comment);
+                    if ($stmt->execute()) {
+                        $message = 'Thank you — your review has been submitted.';
+                    } else {
+                        $error = 'Could not save your review. Please try again.';
+                    }
+                    $stmt->close();
+                }
+            }
+        }
+    }
 }
 
+$products = [];
+$r = $conn->query('SELECT product_id, name FROM products ORDER BY name');
+if ($r) {
+    while ($row = $r->fetch_assoc()) {
+        $products[] = $row;
+    }
+}
+
+account_header('Reviews','review.php');
+if ($message) { account_flash($message); }
+if ($error) { account_flash($error,'error'); }
 ?>
-
-<!DOCTYPE html>
-
-<html lang="en">
-
-<head>
-
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>MST PERFUMES | reviews</title>
-
-
-    <!-- Main CSS -->
-    <link
-        rel="stylesheet"
-        href="css/style.css"
-    >
-
-    <!-- Font Awesome -->
-    <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
-    >
-
-</head>
-
-
-<body>
-
-
-<!-- =========================================================
-     NAVIGATION
-========================================================= -->
-
-<nav class="navbar">
-
-    <div class="navbar-container">
-
-
-        <!-- Brand -->
-
-        <div class="navbar-brand">
-
-            <h1>
-
-                <a href="index.php">
-                    MST PERFUMES
-                </a>
-
-            </h1>
-
-        </div>
-
-
-        <!-- Navigation links -->
-
-        <ul class="navbar-items">
-
-            <li>
-                <a href="index.php">
-                    HOME
-                </a>
-            </li>
-
-            <li>
-                <a href="shopping.php">
-                    PRODUCTS
-                </a>
-            </li>
-
-            <li>
-                <a href="forum.php">
-                    FORUM
-                </a>
-            </li>
-
-            <li>
-                <a href="cart.php">
-                    VIEW CART (<?= $cartCount ?>)
-                </a>
-            </li>
-
-        </ul>
-
-
-        <!-- Login / Logout -->
-
-        <div class="navbar-account">
-
-            <?php if ($isLoggedIn): ?>
-
-                <a href="login.php?logout=1">
-                    Logout
-                </a>
-
-            <?php else: ?>
-
-                <a href="login.php">
-                    Login
-                </a>
-
-            <?php endif; ?>
-
-        </div>
-
-    </div>
-
-</nav>
-
-
-<!-- =========================================================
-     HEADER
-========================================================= -->
-
-<header class="header">
-
-    <div class="top-bar">
-
-
-        <!-- Welcome -->
-
-        <div>
-
-            <?php if ($isLoggedIn): ?>
-
-                Welcome, <?= $username ?>
-
-            <?php else: ?>
-
-                Welcome, Guest
-
-            <?php endif; ?>
-
-        </div>
-
-
-        <!-- Account links -->
-
-        <div>
-
-            <?php if (!$isLoggedIn): ?>
-
-                <a href="login.php">
-                    Login
-                </a>
-
-                /
-
-                <a href="register.php">
-                    Register
-                </a>
-
-            <?php else: ?>
-
-                <a href="cart.php">
-                    Cart (<?= $cartCount ?>)
-                </a>
-
-            <?php endif; ?>
-
-        </div>
-
-    </div>
-
-</header>
-
-
-<!-- =========================================================
-     MAIN CONTENT
-========================================================= -->
-
-<main>
-
-
-    <!-- =====================================================
-         FORUM HERO
-    ====================================================== -->
-
-    <section
-        id="forum-hero"
-        class="page-hero"
-    >
-
-        <div class="container">
-
-            <h2>
-                The Entrepreneur Hub
-            </h2>
-
-            <p>
-                Connect with peers, share sales tips,
-                and grow your fragrance business.
-            </p>
-
-
-            <?php if ($isLoggedIn): ?>
-
-                <a
-                    href="#new-post"
-                    class="btn btn-primary"
-                >
-                    Start a New Discussion
-                </a>
-
-            <?php else: ?>
-
-                <a
-                    href="login.php"
-                    class="btn btn-primary"
-                >
-                    Login to Start a Discussion
-                </a>
-
-            <?php endif; ?>
-
-        </div>
-
-    </section>
-
-
-    <!-- =====================================================
-         FORUM TOPICS
-    ====================================================== -->
-
-    <section
-        id="forum-topics"
-        class="page-content container"
-    >
-
-        <h3>
-            Recent Discussions
-        </h3>
-
-
-        <div class="forum-list">
-
-
-            <!-- Topic 1 -->
-
-            <article class="forum-topic">
-
-                <div class="topic-header">
-
-                    <h4>
-                        Effective Social Media Marketing
-                        for Fragrances
-                    </h4>
-
-                    <span class="topic-meta">
-
-                        Posted by: Alex |
-                        56 Replies |
-                        Last Activity: 2h ago
-
-                    </span>
-
-                </div>
-
-
-                <div class="topic-excerpt">
-
-                    <p>
-                        I've been struggling to generate
-                        interest on Instagram. What strategies
-                        are working for everyone?
-                    </p>
-
-                </div>
-
-            </article>
-
-
-            <!-- Topic 2 -->
-
-            <article class="forum-topic">
-
-                <div class="topic-header">
-
-                    <h4>
-                        Success Story: My First Bulk Order Profit
-                    </h4>
-
-                    <span class="topic-meta">
-
-                        Posted by: Sarah M. |
-                        12 Replies |
-                        Last Activity: 1 day ago
-
-                    </span>
-
-                </div>
-
-
-                <div class="topic-excerpt">
-
-                    <p>
-                        Just wanted to share my first
-                        profitable month! Key lesson:
-                        focus on niche scents.
-                    </p>
-
-                </div>
-
-            </article>
-
-        </div>
-
-    </section>
-
-
-    <!-- =====================================================
-         NEW DISCUSSION
-    ====================================================== -->
-
-    <?php if ($isLoggedIn): ?>
-
-        <section
-            id="new-post"
-            class="page-content container"
-        >
-
-            <h3>
-                Start a New Discussion
-            </h3>
-
-
-            <form
-                action="create_post.php"
-                method="POST"
-            >
-
-                <div class="input-group">
-
-                    <label for="title">
-                        Discussion Title
-                    </label>
-
-                    <input
-                        type="text"
-                        id="title"
-                        name="title"
-                        placeholder="Enter discussion title"
-                        required
-                    >
-
-                </div>
-
-
-                <div class="input-group">
-
-                    <label for="content">
-                        Message
-                    </label>
-
-                    <textarea
-                        id="content"
-                        name="content"
-                        placeholder="Write your discussion..."
-                        rows="6"
-                        required
-                    ></textarea>
-
-                </div>
-
-
-                <button
-                    type="submit"
-                    name="create_post"
-                    class="btn btn-primary"
-                >
-                    Post Discussion
-                </button>
-
-            </form>
-
-        </section>
-
-    <?php endif; ?>
-
-
-    <!-- =====================================================
-         REVIEWS SLIDER
-    ====================================================== -->
-
-    <section class="slider">
-
-        <div class="reviews">
-
-            <h2>
-                <span>/</span>
-                reviews
-            </h2>
-
-        </div>
-
-
-        <div class="slide-container">
-            <!-- Reviews will be loaded here -->
-        </div>
-
-
-        <!-- Previous button -->
-
-        <button
-            class="btn prev-btn"
-            type="button"
-            aria-label="Previous review"
-        >
-
-            <i class="fas fa-chevron-left"></i>
-
-        </button>
-
-
-        <!-- Next button -->
-
-        <button
-            class="btn next-btn"
-            type="button"
-            aria-label="Next review"
-        >
-
-            <i class="fas fa-chevron-right"></i>
-
-        </button>
-
-    </section>
-
-</main>
-
-
-<!-- =========================================================
-     FOOTER
-========================================================= -->
-
-<footer>
-
-    <h1 class="footer-brand">
-        MST PERFUMES
-    </h1>
-
-    <p>
-        &copy; <?= date("Y") ?>
-        MST Perfumes. All rights reserved.
+<section class="panel">
+    <h2>Share your fragrance experience</h2>
+    <p class="muted">
+        <?php if (empty($_SESSION['user_id'])): ?>
+            You can browse reviews without an account, but you must sign in before submitting a review.
+        <?php else: ?>
+            Tell other customers what you thought of a scent.
+        <?php endif; ?>
     </p>
 
-</footer>
+    <?php if (!$products): ?>
+        <div class="empty-state">No products are available to review yet.</div>
+    <?php else: ?>
+        <form method="post">
+            <input type="hidden" name="csrf_token" value="<?= account_e(account_csrf_token()) ?>">
+            <div class="form-grid">
+                <div class="field">
+                    <label for="product_id">Perfume</label>
+                    <select id="product_id" name="product_id" required>
+                        <option value="">Choose a perfume</option>
+                        <?php foreach ($products as $p): ?>
+                            <option value="<?= (int) $p['product_id'] ?>"><?= account_e($p['name']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="rating">Rating</label>
+                    <select id="rating" name="rating" required>
+                        <option value="">Choose a rating</option>
+                        <option value="5">5 — Excellent</option>
+                        <option value="4">4 — Very good</option>
+                        <option value="3">3 — Good</option>
+                        <option value="2">2 — Fair</option>
+                        <option value="1">1 — Poor</option>
+                    </select>
+                </div>
+                <div class="field full">
+                    <label for="comment">Your review</label>
+                    <textarea id="comment" name="comment" required maxlength="2000" placeholder="What did you like about this fragrance?"></textarea>
+                </div>
+            </div>
+            <div class="form-actions">
+                <?php if (empty($_SESSION['user_id'])): ?>
+                    <a class="btn" href="login.php?redirect=review.php">Login to submit a review</a>
+                <?php else: ?>
+                    <button class="btn" type="submit">Submit review</button>
+                <?php endif; ?>
+            </div>
+        </form>
+    <?php endif; ?>
+</section>
 
-
-<!-- =========================================================
-     JAVASCRIPT
-========================================================= -->
-
-<script src="js/Script.js"></script>
-
-</body>
-
-</html>
+<section class="panel">
+    <h2>Customer reviews</h2>
+    <?php
+    $hasUser = account_column_exists($conn,'reviews','user_id');
+    $hasComment = account_column_exists($conn,'reviews','comment');
+    $hasCreated = account_column_exists($conn,'reviews','created_at');
+    if (!$hasUser || !$hasComment) {
+        echo '<p class="small-note">The reviews table needs user_id and comment columns in the reviews table.</p>';
+    } else {
+        $sql = 'SELECT r.rating, r.comment' . ($hasCreated ? ', r.created_at' : '') . ', p.name AS product_name FROM reviews r LEFT JOIN products p ON p.product_id = r.product_id ORDER BY r.review_id DESC LIMIT 20';
+        $result = $conn->query($sql);
+        if (!$result || $result->num_rows === 0) {
+            echo '<div class="empty-state">No reviews have been posted yet. Be the first to share your experience.</div>';
+        } else {
+            while ($row = $result->fetch_assoc()) {
+                echo '<article class="review-card"><h3>' . account_e($row['product_name'] ?? 'Perfume') . '</h3>';
+                echo '<div class="stars">' . str_repeat('★', max(0, min(5, (int) ($row['rating'] ?? 0)))) . str_repeat('☆', 5 - max(0, min(5, (int) ($row['rating'] ?? 0)))) . '</div>';
+                echo '<p>' . nl2br(account_e($row['comment'] ?? '')) . '</p>';
+                if ($hasCreated) { echo '<p class="small-note">' . account_e($row['created_at'] ?? '') . '</p>'; }
+                echo '</article>';
+            }
+        }
+    }
+    ?>
+</section>
+<?php account_footer(); ?>

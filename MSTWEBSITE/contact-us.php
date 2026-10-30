@@ -1,193 +1,249 @@
 <?php
 session_start();
 
-
-// ---------------------------------------------------------------------------
-// Log out: login.php?logout=1
-// ---------------------------------------------------------------------------
-if (isset($_GET['logout'])) {
-    $_SESSION = [];
-    if (ini_get('session.use_cookies')) {
-        $params = session_get_cookie_params();
-        setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
-    }
-    session_destroy();
-    header('Location: login.php');
-    exit();
+function e(mixed $value): string
+{
+    return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 }
 
-// Already signed in? Go to the home page.
-if (isset($_SESSION['user_id'])) {
-    header('Location: index.php');
-    exit();
-}
-
-// Which form to show: login.php (log in) or login.php?show=register
-$mode        = (($_GET['show'] ?? '') === 'register') ? 'register' : 'login';
-$message     = '';
-$messageType = 'error';
-$old         = ['name' => '', 'username' => ''];
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    require_once __DIR__ . '/MSTDBConn.php'; // gives us $conn
-
-    $action = $_POST['action'] ?? '';
-
-    // -----------------------------------------------------------------------
-    // Register
-    // -----------------------------------------------------------------------
-    if ($action === 'register') {
-        $mode     = 'register';
-        $name     = trim($_POST['name'] ?? '');
-        $username = strtolower(trim($_POST['username'] ?? ''));
-        $password = $_POST['password'] ?? '';
-        $old      = ['name' => $name, 'username' => $username];
-
-        if ($name === '' || $username === '' || $password === '') {
-            $message = 'Please fill in every field.';
-        } elseif (mb_strlen($name) > 100) {
-            $message = 'Your name must be 100 characters or fewer.';
-        } elseif (!preg_match('/^[a-z0-9_.]{3,30}$/', $username)) {
-            $message = 'Username must be 3 to 30 characters: letters, numbers, dots or underscores.';
-        } elseif (strlen($password) < 8) {
-            $message = 'Password must be at least 8 characters.';
-        } else {
-            try {
-                $hash = password_hash($password, PASSWORD_DEFAULT);
-
-                $conn->begin_transaction();
-
-                $stmt = $conn->prepare('INSERT INTO users (name, username, password) VALUES (?, ?, ?)');
-                $stmt->bind_param('sss', $name, $username, $hash);
-                $stmt->execute();
-                $newId = $conn->insert_id;
-                $stmt->close();
-
-                // user_id is the key the cart, orders and other tables point at.
-                $stmt = $conn->prepare('UPDATE users SET user_id = id WHERE id = ?');
-                $stmt->bind_param('i', $newId);
-                $stmt->execute();
-                $stmt->close();
-
-                $conn->commit();
-
-                $mode        = 'login';
-                $messageType = 'success';
-                $message     = 'Account created. Log in below.';
-                $old         = ['name' => '', 'username' => $username];
-            } catch (mysqli_sql_exception $ex) {
-                try {
-                    $conn->rollback();
-                } catch (Throwable $ignored) {
-                }
-                if ((int) $ex->getCode() === 1062) {
-                    $message = 'That username is taken. Try another one.';
-                } else {
-                    error_log('MST register failed: ' . $ex->getMessage());
-                    $message = 'We could not create your account. Please try again.';
-                }
-            }
-        }
-    }
-
-    // -----------------------------------------------------------------------
-    // Log in
-    // -----------------------------------------------------------------------
-    if ($action === 'login') {
-        $mode     = 'login';
-        $username = strtolower(trim($_POST['username'] ?? ''));
-        $password = $_POST['password'] ?? '';
-        $old      = ['name' => '', 'username' => $username];
-
-        if ($username === '' || $password === '') {
-            $message = 'Enter your username and password.';
-        } else {
-            try {
-                $stmt = $conn->prepare('SELECT id, user_id, name, username, password, role FROM users WHERE username = ? LIMIT 1');
-                $stmt->bind_param('s', $username);
-                $stmt->execute();
-                $user = $stmt->get_result()->fetch_assoc();
-                $stmt->close();
-
-                if ($user && password_verify($password, $user['password'])) {
-                    session_regenerate_id(true);
-                    $_SESSION['user_id']  = (int) ($user['user_id'] ?? $user['id']);
-                    $_SESSION['name']     = $user['name'];
-                    $_SESSION['username'] = $user['username'];
-                    $_SESSION['role']     = $user['role'];
-                    header('Location: index.php');
-                    exit();
-                }
-
-                // Same message for "no such user" and "wrong password".
-                $message = 'Incorrect username or password.';
-            } catch (mysqli_sql_exception $ex) {
-                error_log('MST login failed: ' . $ex->getMessage());
-                $message = 'We could not log you in right now. Please try again.';
-            }
-        }
-    }
-}
-
-$pageTitle   = $mode === 'register' ? 'Create account' : 'Log in';
-$activePage  = '';
-$extraCss    = ['css/loginstyle.css'];
-$hideAccount = true;
-include __DIR__ . '/partials/header.php';
+$isLoggedIn = isset($_SESSION['user_id']);
+$userId = $isLoggedIn ? (int) $_SESSION['user_id'] : 0;
+$userName = $isLoggedIn
+    ? (string) ($_SESSION['name'] ?? $_SESSION['email'] ?? 'My account')
+    : '';
+$userRole = strtolower((string) ($_SESSION['role'] ?? 'user'));
+$isAdmin = $isLoggedIn && $userRole === 'admin';
+$filter = 'all';
+$cartCount = 0;
 ?>
 
-    <div class="auth">
-        <div class="auth-card">
-<?php if ($mode === 'register'): ?>
-            <h1>Create your account</h1>
-<?php else: ?>
-            <h1>Log in</h1>
-<?php endif; ?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MST PERFUMES | Contact Us</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/account.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="pictures/logo.jpeg">
+</head>
+<body>
+<div class="top-bar">
+    <span><i class="fas fa-star" aria-hidden="true"></i> Discover your next signature scent</span>
+    <span>Free delivery on orders over R600</span>
+</div>
 
-<?php if ($message !== ''): ?>
-            <p class="<?= $messageType === 'success' ? 'success-msg' : 'error-msg' ?>" role="alert"><?= e($message) ?></p>
-<?php endif; ?>
+<div class="account-topline">
+    MST PERFUMES <span>•</span> A fragrance that feels like you
+</div>
 
-<?php if ($mode === 'register'): ?>
-            <form method="post" action="login.php?show=register">
-                <input type="hidden" name="action" value="register">
+<header class="account-header">
+    <a class="account-brand" href="index.php" aria-label="MST Perfumes home">
+        <span class="brand-mark">M</span>
+        <span>
+            <strong>MST PERFUMES</strong>
+            <small>THE ART OF FRAGRANCE</small>
+        </span>
+    </a>
 
-                <div class="field">
-                    <label for="name">Name</label>
-                    <input class="input" type="text" id="name" name="name" value="<?= e($old['name']) ?>" maxlength="100" autocomplete="name" required>
+    <nav class="account-nav" aria-label="Main navigation">
+        <a href="index.php" class="active">Shop</a>
+        <a href="index.php?filter=male">Men's Perfume</a>
+        <a href="index.php?filter=female">Women's Perfume</a>
+        <a href="index.php?filter=unisex">Unisex Perfume</a>
+        <a href="review.php">Reviews</a>
+        <a href="contact-us.php">Contact Us</a>
+    </nav>
+
+    <div class="account account-tools">
+        <?php if ($isLoggedIn): ?>
+            <span class="account__name">
+                Hi, <?= e($userName) ?>
+            </span>
+
+            <div class="nav-dropdown account-dropdown">
+                <button
+                    class="nav-dropdown__toggle"
+                    type="button"
+                    aria-expanded="false"
+                    aria-controls="profile-menu"
+                >
+                    <i class="fas fa-user-circle" aria-hidden="true"></i>
+                    My Account
+                    <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                </button>
+
+                <ul class="nav-dropdown__menu" id="profile-menu">
+                    <?php if (!$isLoggedIn): ?>
+                        <li><a href="login.php">Login</a></li>
+                        <li><a href="register.php">Create an account</a></li>
+                    <?php elseif ($isAdmin): ?>
+                        <li><a href="profile.php">My Profile</a></li>
+                        <li><a href="admin_dashboard.php">Admin Dashboard</a></li>
+                        <li><a href="login.php?logout=1">Logout</a></li>
+                    <?php else: ?>
+                        <li><a href="usersprofile.php">My Profile</a></li>
+                        <li><a href="order.php">My Orders</a></li>
+                        <li><a href="review.php">My Reviews</a></li>
+                        <li><a href="login.php?logout=1">Logout</a></li>
+                    <?php endif; ?>
+                </ul>
+            </div>
+        <?php else: ?>
+            <a class="btn btn-ghost" href="login.php">Login</a>
+        <?php endif; ?>
+
+        <a href="cart.php" aria-label="Shopping cart, <?= $cartCount ?> items">
+            <i class="fas fa-shopping-bag" aria-hidden="true"></i>
+            <span class="cart-count"><?= $cartCount ?></span>
+        </a>
+    </div>
+</header>
+
+<main class="contact-page">
+    <section class="contact-card">
+        <h1>Contact MST Perfumes</h1>
+        <p class="lead">
+            MST Perfumes is a fragrance brand inspired by elegance, confidence, and personal expression.
+            We curate premium perfumes for men, women, and unisex collections designed to leave a lasting impression.
+        </p>
+
+        <div class="contact-grid">
+            <div class="contact-info-box">
+                <h2>Our Brand</h2>
+                <p>
+                    We believe the right fragrance should feel like your signature — refined, distinctive, and memorable.
+                </p>
+            </div>
+
+            <div class="contact-info-box">
+                <h2>Our Collections</h2>
+                <p>
+                    Explore luxury scents for every personality, from fresh daytime aromas to rich evening fragrances.
+                </p>
+            </div>
+
+            <div class="contact-info-box">
+                <h2>Customer Care</h2>
+                <p>
+                    Need help with an order, fragrance recommendation, or delivery question? Our team is ready to assist.
+                </p>
+            </div>
+        </div>
+
+        <div class="contact-details">
+            <h2>Get in touch</h2>
+            <p>
+                <strong>Email:</strong> <a href="mailto:mohaochiloane539@gmail.com">mohaochiloane539@gmail.com</a>
+            </p>
+            <p>
+                <strong>Phone:</strong> <a href="tel:+27715118509">+27 71 511 8509</a>
+            </p>
+            <p>
+                <strong>Business Hours:</strong> Monday to Saturday, 9:00 AM – 5:00 PM
+            </p>
+            <p>
+                <strong>Location:</strong> Pretoria, South Africa
+            </p>
+        </div>
+    </section>
+
+    <div class="contact-layout">
+        <div class="contact-form-panel">
+            <h2>Send us a message</h2>
+            <form class="contact-form" action="mailto:mohaochiloane539@gmail.com" method="post" enctype="text/plain">
+                <div class="contact-field">
+                    <label for="name">Full name</label>
+                    <input id="name" name="name" type="text" placeholder="Your name" required>
                 </div>
-                <div class="field">
-                    <label for="username">Username</label>
-                    <input class="input" type="text" id="username" name="username" value="<?= e($old['username']) ?>" minlength="3" maxlength="30" pattern="[A-Za-z0-9_.]{3,30}" autocomplete="username" required>
-                    <p class="hint">3 to 30 letters, numbers, dots or underscores.</p>
-                </div>
-                <div class="field">
-                    <label for="password">Password</label>
-                    <input class="input" type="password" id="password" name="password" minlength="8" autocomplete="new-password" required>
-                    <p class="hint">At least 8 characters.</p>
+
+                <div class="contact-field">
+                    <label for="email">Email address</label>
+                    <input id="email" name="email" type="email" placeholder="you@example.com" required>
                 </div>
 
-                <button type="submit" class="btn-primary auth-submit">Create account</button>
+                <div class="contact-field">
+                    <label for="subject">Subject</label>
+                    <select id="subject" name="subject">
+                        <option value="Order enquiry">Order enquiry</option>
+                        <option value="Product question">Product question</option>
+                        <option value="Delivery issue">Delivery issue</option>
+                        <option value="General enquiry">General enquiry</option>
+                    </select>
+                </div>
+
+                <div class="contact-field">
+                    <label for="message">Message</label>
+                    <textarea id="message" name="message" placeholder="Tell us how we can help..." required></textarea>
+                </div>
+
+                <button type="submit">Send message</button>
             </form>
-            <p class="auth-switch">Already have an account? <a href="login.php">Log in</a></p>
-<?php else: ?>
-            <form method="post" action="login.php">
-                <input type="hidden" name="action" value="login">
+        </div>
 
-                <div class="field">
-                    <label for="username">Username</label>
-                    <input class="input" type="text" id="username" name="username" value="<?= e($old['username']) ?>" autocomplete="username" required>
-                </div>
-                <div class="field">
-                    <label for="password">Password</label>
-                    <input class="input" type="password" id="password" name="password" autocomplete="current-password" required>
-                </div>
+        <div>
+            <div class="contact-story">
+                <h2>Our story</h2>
+                <p>
+                    MST Perfumes was created for people who want their fragrance to say something meaningful.
+                    From the first spritz to the final trail, each scent is chosen to reflect personality, confidence,
+                    and everyday luxury.
+                </p>
+                <p>
+                    <strong>Our promise:</strong> premium quality, memorable fragrances, and a shopping experience that feels personal.
+                </p>
+            </div>
 
-                <button type="submit" class="btn-primary auth-submit">Log in</button>
-            </form>
-            <p class="auth-switch">New to MST Perfumes? <a href="login.php?show=register">Create an account</a></p>
-<?php endif; ?>
+            <div class="contact-map" style="margin-top: 20px;">
+                <h2>Find us</h2>
+                <p>Pretoria, South Africa</p>
+                <iframe
+                    src="https://www.google.com/maps?q=Pretoria%20South%20Africa&z=11&output=embed"
+                    loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade"
+                    title="MST Perfumes location map">
+                </iframe>
+            </div>
+
+            <div class="contact-social" style="margin-top: 20px;">
+                <h2>Follow us</h2>
+                <p>Stay connected with new launches, seasonal scents, and fragrance inspiration.</p>
+                <div class="social-links">
+                    <a href="https://www.instagram.com" target="_blank" rel="noreferrer"><i class="fab fa-instagram"></i> Instagram</a>
+                    <a href="https://www.facebook.com" target="_blank" rel="noreferrer"><i class="fab fa-facebook-f"></i> Facebook</a>
+                    <a href="https://www.tiktok.com" target="_blank" rel="noreferrer"><i class="fab fa-tiktok"></i> TikTok</a>
+                </div>
+            </div>
         </div>
     </div>
+</main>
 
-<?php include __DIR__ . '/partials/footer.php'; ?>
+<footer class="site-footer">
+    <div class="site-footer__inner">
+        <div>
+            <h2 class="site-footer__brand">MST PERFUMES</h2>
+            <p class="site-footer__fine">Find a fragrance that feels like you.</p>
+            <p class="site-footer__fine">&copy; <?= date('Y') ?> MST Perfumes. All rights reserved.</p>
+        </div>
+        <div>
+            <h3 class="site-footer__title">Shop</h3>
+            <ul>
+                <li><a href="index.php">All Perfumes</a></li>
+                <li><a href="index.php?filter=male">Men's Perfume</a></li>
+                <li><a href="index.php?filter=female">Women's Perfume</a></li>
+                <li><a href="index.php?filter=unisex">Unisex Perfume</a></li>
+            </ul>
+        </div>
+        <div>
+            <h3 class="site-footer__title">Help</h3>
+            <ul>
+                <li><a href="review.php">Reviews</a></li>
+                <li><a href="contact-us.php">Contact Us</a></li>
+                <li><a href="cart.php">Shopping Cart</a></li>
+            </ul>
+        </div>
+    </div>
+</footer>
+</body>
+</html>
