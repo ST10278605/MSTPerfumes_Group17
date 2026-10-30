@@ -111,9 +111,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_t
 
     if (!hash_equals((string) $_SESSION['csrf_token'], $postedToken)) {
         $error = 'Your session token was not valid. Please refresh the page and try again.';
-    } elseif (!$isLoggedIn) {
-        header('Location: login.php?redirect=' . rawurlencode('index.php'));
-        exit;
     } elseif (!$productId || $productId < 1) {
         $error = 'That product could not be found.';
     } else {
@@ -133,82 +130,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_t
             } elseif ((int) $product['stock_quantity'] < 1) {
                 $error = 'Sorry, this perfume is currently out of stock.';
             } else {
-                // Create a cart for this customer if they do not already have one.
-                $stmt = $conn->prepare('SELECT cart_id FROM carts WHERE user_id = ? LIMIT 1');
+                if (!isset($_SESSION['cart']) || !is_array($_SESSION['cart'])) {
+                    $_SESSION['cart'] = [];
+                }
 
-                if (!$stmt) {
-                    $error = 'Unable to access your cart. Please check that the cart tables exist.';
-                } else {
-                    $stmt->bind_param('i', $userId);
-                    $stmt->execute();
-                    $cartResult = $stmt->get_result();
-                    $cartRow = $cartResult ? $cartResult->fetch_assoc() : null;
-                    $stmt->close();
+                $existingQuantity = isset($_SESSION['cart'][(string) $productId]) ? (int) $_SESSION['cart'][(string) $productId] : 0;
+                $newQuantity = min($existingQuantity + 1, (int) $product['stock_quantity']);
+                $_SESSION['cart'][(string) $productId] = $newQuantity;
 
-                    if ($cartRow) {
-                        $cartId = (int) $cartRow['cart_id'];
-                    } else {
-                        $stmt = $conn->prepare('INSERT INTO carts (user_id) VALUES (?)');
-                        if (!$stmt) {
-                            $error = 'Unable to create your cart.';
-                            $cartId = 0;
-                        } else {
-                            $stmt->bind_param('i', $userId);
-                            if ($stmt->execute()) {
+                if ($isLoggedIn) {
+                    $stmt = $conn->prepare('SELECT cart_id FROM carts WHERE user_id = ? LIMIT 1');
+                    if ($stmt) {
+                        $stmt->bind_param('i', $userId);
+                        $stmt->execute();
+                        $cartRow = $stmt->get_result()->fetch_assoc();
+                        $stmt->close();
+
+                        $cartId = $cartRow ? (int) $cartRow['cart_id'] : 0;
+                        if ($cartId === 0) {
+                            $stmt = $conn->prepare('INSERT INTO carts (user_id) VALUES (?)');
+                            if ($stmt) {
+                                $stmt->bind_param('i', $userId);
+                                $stmt->execute();
                                 $cartId = (int) $conn->insert_id;
-                            } else {
-                                $cartId = 0;
-                                $error = 'Unable to create your cart. Please try again.';
+                                $stmt->close();
                             }
-                            $stmt->close();
                         }
-                    }
 
-                    if ($error === '' && $cartId > 0) {
-                        $stmt = $conn->prepare('SELECT quantity FROM cart_items WHERE cart_id = ? AND product_id = ? LIMIT 1');
+                        if ($cartId > 0) {
+                            $stmt = $conn->prepare('SELECT quantity FROM cart_items WHERE cart_id = ? AND product_id = ? LIMIT 1');
+                            if ($stmt) {
+                                $stmt->bind_param('ii', $cartId, $productId);
+                                $stmt->execute();
+                                $itemRow = $stmt->get_result()->fetch_assoc();
+                                $stmt->close();
 
-                        if (!$stmt) {
-                            $error = 'Unable to check the quantity already in your cart.';
-                        } else {
-                            $stmt->bind_param('ii', $cartId, $productId);
-                            $stmt->execute();
-                            $itemResult = $stmt->get_result();
-                            $itemRow = $itemResult ? $itemResult->fetch_assoc() : null;
-                            $stmt->close();
-
-                            $existingQuantity = $itemRow ? (int) $itemRow['quantity'] : 0;
-
-                            if ($existingQuantity >= (int) $product['stock_quantity']) {
-                                $error = 'You already have the maximum available stock of this perfume in your cart.';
-                            } elseif ($itemRow) {
-                                $newQuantity = min($existingQuantity + 1, (int) $product['stock_quantity']);
-                                $stmt = $conn->prepare('UPDATE cart_items SET quantity = ? WHERE cart_id = ? AND product_id = ?');
-                                if (!$stmt) {
-                                    $error = 'Unable to update your cart.';
-                                } else {
-                                    $stmt->bind_param('iii', $newQuantity, $cartId, $productId);
-                                    if (!$stmt->execute()) {
-                                        $error = 'Unable to update your cart. Please try again.';
+                                if ($itemRow) {
+                                    $stmt = $conn->prepare('UPDATE cart_items SET quantity = ? WHERE cart_id = ? AND product_id = ?');
+                                    if ($stmt) {
+                                        $stmt->bind_param('iii', $newQuantity, $cartId, $productId);
+                                        $stmt->execute();
+                                        $stmt->close();
                                     }
-                                    $stmt->close();
-                                }
-                                if ($error === '') {
-                                    $_SESSION['cart'][ (string) $productId ] = $newQuantity;
-                                }
-                            } else {
-                                $quantity = 1;
-                                $stmt = $conn->prepare('INSERT INTO cart_items (cart_id, product_id, quantity) VALUES (?, ?, ?)');
-                                if (!$stmt) {
-                                    $error = 'Unable to add this perfume to your cart.';
                                 } else {
-                                    $stmt->bind_param('iii', $cartId, $productId, $quantity);
-                                    if (!$stmt->execute()) {
-                                        $error = 'Unable to add this perfume to your cart. Please try again.';
+                                    $stmt = $conn->prepare('INSERT INTO cart_items (cart_id, product_id, quantity) VALUES (?, ?, ?)');
+                                    if ($stmt) {
+                                        $stmt->bind_param('iii', $cartId, $productId, $newQuantity);
+                                        $stmt->execute();
+                                        $stmt->close();
                                     }
-                                    $stmt->close();
-                                }
-                                if ($error === '') {
-                                    $_SESSION['cart'][ (string) $productId ] = 1;
                                 }
                             }
                         }
@@ -235,6 +205,10 @@ if (isset($_GET['added']) && $_GET['added'] === '1') {
 
 /* Get cart count from the database for logged-in customers. */
 $cartCount = 0;
+if (isset($_SESSION['cart']) && is_array($_SESSION['cart'])) {
+    $cartCount = array_sum(array_map('intval', $_SESSION['cart']));
+}
+
 if ($isLoggedIn && tableExists($conn, 'carts') && tableExists($conn, 'cart_items')) {
     $stmt = $conn->prepare(
         'SELECT COALESCE(SUM(ci.quantity), 0) AS item_count
@@ -342,6 +316,7 @@ $pageTitle = $allowedFilters[$filter] ?? 'All Perfumes';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MST PERFUMES | Home</title>
+    <link rel="stylesheet" href="css/account.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="icon" type="image/x-icon" href="pictures/logo.svg">
@@ -352,42 +327,46 @@ $pageTitle = $allowedFilters[$filter] ?? 'All Perfumes';
     <span>Free delivery on orders over R600</span>
 </div>
 
-<header class="site-header">
-    <div class="site-header__inner">
-        <a class="brand" href="index.php" aria-label="MST Perfumes home">
-            <img src="pictures/logo.jpeg" alt="MST Perfumes logo">
-        </a>
+<div class="account-topline">
+    MST PERFUMES <span>•</span> A fragrance that feels like you
+</div>
 
-        <nav class="site-nav" aria-label="Main navigation">
-            <a href="index.php" class="<?= $filter === 'all' ? 'is-current' : '' ?>">Shop All</a>
+<header class="account-header">
+    <a class="account-brand" href="index.php" aria-label="MST Perfumes home">
+        <span class="brand-mark">M</span>
+        <span>
+            <strong>MST PERFUMES</strong>
+            <small>THE ART OF FRAGRANCE</small>
+        </span>
+    </a>
 
-            <div class="nav-dropdown">
-                <button class="nav-dropdown__toggle" type="button" aria-expanded="false" aria-controls="shop-menu">
-                    Shop by scent <i class="fas fa-chevron-down" aria-hidden="true"></i>
-                </button>
-                <ul class="nav-dropdown__menu" id="shop-menu">
-                    <li><a href="index.php?filter=male">Men's Perfume</a></li>
-                    <li><a href="index.php?filter=female">Women's Perfume</a></li>
-                    <li><a href="index.php?filter=unisex">Unisex Perfume</a></li>
-                </ul>
-            </div>
+    <nav class="account-nav" aria-label="Main navigation">
+        <a href="index.php" class="active">Shop</a>
+        <a href="index.php?filter=male">Men's Perfume</a>
+        <a href="index.php?filter=female">Women's Perfume</a>
+        <a href="index.php?filter=unisex">Unisex Perfume</a>
+        <a href="review.php">Reviews</a>
+        <a href="contact-us.php">Contact Us</a>
+    </nav>
 
-            <a href="review">Reviews</a>
-            <a href="contact-us">Contact Us</a>
-        </nav>
-
-        <div class="account">
-            <?php if ($isLoggedIn): ?>
-                <span class="account__name">Hi, <?= e($userName) ?></span>
-            <?php else: ?>
-                <a class="btn btn-ghost" href="login.php">Login</a>
-            <?php endif; ?>
+    <div class="account account-tools">
+        <?php if ($isLoggedIn): ?>
+            <span class="account__name">
+                Hi, <?= e($userName) ?>
+            </span>
 
             <div class="nav-dropdown account-dropdown">
-                <button class="nav-dropdown__toggle" type="button" aria-expanded="false" aria-controls="profile-menu">
-                    <i class="fas fa-user-circle" aria-hidden="true"></i> Profile
+                <button
+                    class="nav-dropdown__toggle"
+                    type="button"
+                    aria-expanded="false"
+                    aria-controls="profile-menu"
+                >
+                    <i class="fas fa-user-circle" aria-hidden="true"></i>
+                    My Account
                     <i class="fas fa-chevron-down" aria-hidden="true"></i>
                 </button>
+
                 <ul class="nav-dropdown__menu" id="profile-menu">
                     <?php if (!$isLoggedIn): ?>
                         <li><a href="login.php">Login</a></li>
@@ -395,8 +374,6 @@ $pageTitle = $allowedFilters[$filter] ?? 'All Perfumes';
                     <?php elseif ($isAdmin): ?>
                         <li><a href="profile.php">My Profile</a></li>
                         <li><a href="admin_dashboard.php">Admin Dashboard</a></li>
-                        <li><a href="admin_products.php">Manage Products</a></li>
-                        <li><a href="admin_orders.php">Manage Orders</a></li>
                         <li><a href="login.php?logout=1">Logout</a></li>
                     <?php else: ?>
                         <li><a href="usersprofile.php">My Profile</a></li>
@@ -406,12 +383,14 @@ $pageTitle = $allowedFilters[$filter] ?? 'All Perfumes';
                     <?php endif; ?>
                 </ul>
             </div>
+        <?php else: ?>
+            <a class="btn btn-ghost" href="login.php">Login</a>
+        <?php endif; ?>
 
-            <a href="cart.php" aria-label="Shopping cart, <?= $cartCount ?> items">
-                <i class="fas fa-shopping-bag" aria-hidden="true"></i>
-                <span class="cart-count"><?= $cartCount ?></span>
-            </a>
-        </div>
+        <a href="cart.php" aria-label="Shopping cart, <?= $cartCount ?> items">
+            <i class="fas fa-shopping-bag" aria-hidden="true"></i>
+            <span class="cart-count"><?= $cartCount ?></span>
+        </a>
     </div>
 </header>
 
@@ -564,7 +543,14 @@ $pageTitle = $allowedFilters[$filter] ?? 'All Perfumes';
                                                 </button>
                                             </form>
                                         <?php else: ?>
-                                            <a class="btn btn-primary" href="login.php?redirect=index.php">Login to Add to Cart</a>
+                                            <form method="post" action="index.php?<?= e(http_build_query(array_filter(['filter' => $filter, 'sort' => $sort, 'search' => $search], static fn($v) => $v !== ''))) ?>">
+                                                <input type="hidden" name="csrf_token" value="<?= e($_SESSION['csrf_token']) ?>">
+                                                <input type="hidden" name="action" value="add_to_cart">
+                                                <input type="hidden" name="product_id" value="<?= $productId ?>">
+                                                <button class="btn btn-primary" type="submit">
+                                                    Add to Cart <i class="fas fa-shopping-cart" aria-hidden="true"></i>
+                                                </button>
+                                            </form>
                                         <?php endif; ?>
                                     <?php else: ?>
                                         <button class="btn btn-primary" type="button" disabled>Out of Stock</button>

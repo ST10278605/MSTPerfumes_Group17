@@ -55,11 +55,16 @@ function account_check_csrf(): void {
     }
 }
 function account_header(string $title, string $active = ''): void {
-    $name = (string)($_SESSION['name'] ?? $_SESSION['email'] ?? 'My account');
-    $admin = strtolower((string)($_SESSION['role'] ?? 'user')) === 'admin';
+    $name = isset($_SESSION['user_id'])
+        ? ((string)($_SESSION['name'] ?? $_SESSION['email'] ?? 'My account'))
+        : 'Guest';
+    $admin = isset($_SESSION['user_id']) && strtolower((string)($_SESSION['role'] ?? 'user')) === 'admin';
     $links = $admin
         ? [['admin_dashboard.php','Dashboard'],['profile.php','My Profile'],['admin_products.php','Products'],['admin_orders.php','Orders']]
-        : [['usersprofile.php','My Profile'],['order.php','My Orders'],['review.php','My Reviews']];
+        : (isset($_SESSION['user_id'])
+            ? [['usersprofile.php','My Profile'],['order.php','My Orders'],['review.php','My Reviews']]
+            : [['index.php','Shop'],['review.php','Reviews'],['contact-us.php','Contact Us'],['login.php','Login']]
+        );
     echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">';
     echo '<title>'.account_e($title).' | MST Perfumes</title><link rel="stylesheet" href="css/account.css">';
     echo '<link rel="stylesheet" href="css/style.css"></head><body>';
@@ -69,8 +74,11 @@ function account_header(string $title, string $active = ''): void {
     foreach ($links as $link) {
         echo '<a '.($active === $link[0] ? 'class="active" ' : '').'href="'.account_e($link[0]).'">'.account_e($link[1]).'</a>';
     }
-    echo '<a href="login.php?logout=1">Log out</a></nav></header>';
-    echo '<main class="account-main"><div class="account-welcome"><div><p class="eyebrow">'.($admin ? 'ADMINISTRATION' : 'YOUR MST ACCOUNT').'</p><h1>'.account_e($title).'</h1><p class="muted">Welcome back, '.account_e($name).'.</p></div><a class="text-link" href="index.php">← Return to shop</a></div>';
+    if (isset($_SESSION['user_id'])) {
+        echo '<a href="login.php?logout=1">Log out</a>';
+    }
+    echo '</nav></header>';
+    echo '<main class="account-main"><div class="account-welcome"><div><p class="eyebrow">'.($admin ? 'ADMINISTRATION' : (isset($_SESSION['user_id']) ? 'YOUR MST ACCOUNT' : 'MST PERFUMES')).'</p><h1>'.account_e($title).'</h1><p class="muted">'.(isset($_SESSION['user_id']) ? 'Welcome back, ' : 'Welcome, ').account_e($name).'.</p></div><a class="text-link" href="index.php">← Return to shop</a></div>';
 }
 function account_footer(): void {
     echo '</main><footer class="account-footer"><span>© '.date('Y').' MST Perfumes</span><span>Elegance in every note.</span></footer></body></html>';
