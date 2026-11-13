@@ -24,9 +24,9 @@ class RegisterActivity : AppCompatActivity() {
 
             if (name.isNotEmpty() && email.isNotEmpty() && password.isNotEmpty() && confirmPassword.isNotEmpty()) {
                 if (!isValidEmail(email)) {
-                    binding.etEmail.error = "Please enter a valid email address (e.g., user@gmail.com or user@gmail.co.za)"
+                    binding.etEmail.error = "Only @gmail.com or @gmail.co.za emails are allowed"
                     binding.etEmail.requestFocus()
-                    Toast.makeText(this, "Invalid email address! Please enter a valid email format.", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, "Registration failed: Email must end with @gmail.com or @gmail.co.za", Toast.LENGTH_LONG).show()
                     return@setOnClickListener
                 }
 
@@ -69,11 +69,8 @@ class RegisterActivity : AppCompatActivity() {
 
     private fun isValidEmail(email: String): Boolean {
         if (email.isBlank()) return false
-        val isAndroidPatternValid = android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
-        if (!isAndroidPatternValid) return false
-
-        // Strict domain and TLD verification (e.g. .com, .co.za, .org, .edu.za, .ac.za)
-        val emailRegex = Regex("^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$")
-        return emailRegex.matches(email)
+        val lower = email.lowercase().trim()
+        val emailRegex = Regex("^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(gmail\\.com|gmail\\.co\\.za)$")
+        return emailRegex.matches(lower)
     }
 }
