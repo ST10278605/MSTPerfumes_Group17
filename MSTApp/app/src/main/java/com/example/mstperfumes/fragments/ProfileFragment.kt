@@ -219,6 +219,14 @@ class ProfileFragment : Fragment() {
         binding.etSettingsAddress.setText(sharedPrefs.getString("address", ""))
     }
 
+    private fun isValidEmail(email: String): Boolean {
+        if (email.isBlank()) return false
+        val isAndroidPatternValid = android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+        if (!isAndroidPatternValid) return false
+        val emailRegex = Regex("^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$")
+        return emailRegex.matches(email)
+    }
+
     private fun saveUserSettings() {
         val user = UserRepository.getActiveUser() ?: dbRepo.getAllUsers().firstOrNull()
         val userId = user?.id ?: 1
@@ -231,6 +239,13 @@ class ProfileFragment : Fragment() {
 
         if (newName.isEmpty() || newEmail.isEmpty()) {
             Toast.makeText(requireContext(), "Name and Email cannot be empty", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (!isValidEmail(newEmail)) {
+            binding.etSettingsEmail.error = "Please enter a valid email address (e.g., user@gmail.com or user@domain.co.za)"
+            binding.etSettingsEmail.requestFocus()
+            Toast.makeText(requireContext(), "Invalid email format!", Toast.LENGTH_SHORT).show()
             return
         }
 
