@@ -231,10 +231,9 @@ class ProfileFragment : Fragment() {
 
     private fun isValidEmail(email: String): Boolean {
         if (email.isBlank()) return false
-        val isAndroidPatternValid = android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
-        if (!isAndroidPatternValid) return false
-        val emailRegex = Regex("^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$")
-        return emailRegex.matches(email)
+        val lower = email.lowercase().trim()
+        val emailRegex = Regex("^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(gmail\\.com|gmail\\.co\\.za)$")
+        return emailRegex.matches(lower)
     }
 
     private fun saveUserSettings() {
@@ -253,9 +252,9 @@ class ProfileFragment : Fragment() {
         }
 
         if (!isValidEmail(newEmail)) {
-            binding.etSettingsEmail.error = "Please enter a valid email address (e.g., user@gmail.com or user@domain.co.za)"
+            binding.etSettingsEmail.error = "Only @gmail.com or @gmail.co.za emails are allowed"
             binding.etSettingsEmail.requestFocus()
-            Toast.makeText(requireContext(), "Invalid email format!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Email must end with @gmail.com or @gmail.co.za", Toast.LENGTH_SHORT).show()
             return
         }
 
