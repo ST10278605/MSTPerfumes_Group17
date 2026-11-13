@@ -24,9 +24,9 @@ class RegisterActivity : AppCompatActivity() {
 
             if (name.isNotEmpty() && email.isNotEmpty() && password.isNotEmpty() && confirmPassword.isNotEmpty()) {
                 if (!isValidEmail(email)) {
-                    binding.etEmail.error = "Only @gmail.com or @gmail.co.za emails are allowed"
+                    binding.etEmail.error = "Please enter a valid email address (e.g. name@gmail.com, name@yahoo.com, name@outlook.com)"
                     binding.etEmail.requestFocus()
-                    Toast.makeText(this, "Registration failed: Email must end with @gmail.com or @gmail.co.za", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, "Registration failed: Please enter a valid email address.", Toast.LENGTH_LONG).show()
                     return@setOnClickListener
                 }
 
@@ -70,7 +70,15 @@ class RegisterActivity : AppCompatActivity() {
     private fun isValidEmail(email: String): Boolean {
         if (email.isBlank()) return false
         val lower = email.lowercase().trim()
-        val emailRegex = Regex("^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(gmail\\.com|gmail\\.co\\.za)$")
-        return emailRegex.matches(lower)
+
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(lower).matches()) return false
+
+        val strictEmailRegex = Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,7}$")
+        if (!strictEmailRegex.matches(lower)) return false
+
+        val domain = lower.substringAfter("@")
+        if (domain.length < 4 || !domain.contains(".")) return false
+
+        return true
     }
 }
