@@ -11,9 +11,18 @@ When users open the MST Perfumes app for the first time, they can sign in or cho
 
 Passwords should not be stored as plain text. The app hashes a password before saving it, then checks a hash of the password entered at sign-in against the stored value. This helps protect users' actual passwords if the database is exposed.
 
-#### Registration / Sign-Up Screen
+#### 1.Registration / Sign-Up Screen
 
 <img width="599" height="326" alt="RegistrationSign-Up Screen" src="https://github.com/user-attachments/assets/59efe201-c6fc-4ea4-b313-53ad1c86b15f" />
+
+### 2.Login Screen
+
+<img width="661" height="357" alt="Login Screen" src="https://github.com/user-attachments/assets/445c9f33-97c8-4f2c-97f8-a6056773b4fb" />
+
+### 3.Error message
+
+<img width="643" height="357" alt="Error message" src="https://github.com/user-attachments/assets/3ca0533e-2f7c-4635-ae9e-41731ea04ae1" />
+
 
 ## Website Screenshots
 
