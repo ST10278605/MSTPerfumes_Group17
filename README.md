@@ -1,13 +1,25 @@
-# MST Perfume Website 
+# MST Perfume Website
 
-## Video link for App Presentation 
+## Video link for App Presentation
 https://drive.google.com/file/d/1uC9yH4C8FeUr7D5rOXt0N5QIRzWn4A2F/view?pli=1
 
-## Screenshots
+## MOBILE APPLICATION INTERFACE & FEATURES
+
+### User Registration and Secure Login Interface
+
+When users open the MST Perfumes app for the first time, they can sign in or choose **Register Now** to create an account. Registration collects the user's name, email address, phone number, and password. After completing the form, users can sign in with their account.
+
+Passwords should not be stored as plain text. The app hashes a password before saving it, then checks a hash of the password entered at sign-in against the stored value. This helps protect users' actual passwords if the database is exposed.
+
+#### Registration / Sign-Up Screen
+
+![MST Perfumes mobile app registration screen](docs/images/registration-sign-up.png)
+
+> Add the supplied registration screenshot at `docs/images/registration-sign-up.png` so it displays above.
+
+## Website Screenshots
 
 ### Registration / Sign-Up Screen
-
-
 
 A PHP-based e-commerce and community website for an online perfume store. The project includes product browsing, shopping cart functionality, user login/registration, reviews, forum-style pages, and admin management.
 
