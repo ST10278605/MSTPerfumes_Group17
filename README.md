@@ -1,4 +1,4 @@
-<img width="1379" height="765" alt="5" src="https://github.com/user-attachments/assets/bb7b57f1-1fff-408e-a078-da4053c675b0" /># MST Perfume Website
+# MST Perfume Website
 
 ## Video link for App Presentation
 https://drive.google.com/file/d/1uC9yH4C8FeUr7D5rOXt0N5QIRzWn4A2F/view?pli=1
