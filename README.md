@@ -3,7 +3,7 @@
 ## Video link for App Presentation
 https://drive.google.com/file/d/1uC9yH4C8FeUr7D5rOXt0N5QIRzWn4A2F/view?pli=1
 
-## MOBILE APPLICATION INTERFACE & FEATURES
+## MOBILE APPLICATION SCREENSHOTS & FEATURES
 
 ### User Registration and Secure Login Interface
 
@@ -13,9 +13,7 @@ Passwords should not be stored as plain text. The app hashes a password before s
 
 #### Registration / Sign-Up Screen
 
-![MST Perfumes mobile app registration screen](docs/images/registration-sign-up.png)
-
-> Add the supplied registration screenshot at `docs/images/registration-sign-up.png` so it displays above.
+<img width="599" height="326" alt="RegistrationSign-Up Screen" src="https://github.com/user-attachments/assets/59efe201-c6fc-4ea4-b313-53ad1c86b15f" />
 
 ## Website Screenshots
 
