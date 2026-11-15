@@ -1,10 +1,17 @@
-MSTPerfumeApp/Web
 # MST Perfume Website 
 
 ## Video link for App Presentation 
 https://drive.google.com/file/d/1uC9yH4C8FeUr7D5rOXt0N5QIRzWn4A2F/view?pli=1
 
-A PHP-based e-commerce and community website for an online perfume store. The project includes product browsing, shopping cart functionality, user login/registration, reviews, forum-style pages, and an admin panel for managing products.
+## Screenshots
+
+### Registration / Sign-Up Screen
+
+Place the provided screenshot at `screenshots/registration-signup.png` and it will render below:
+
+![Registration / Sign-Up Screen](screenshots/registration-signup.png)
+
+A PHP-based e-commerce and community website for an online perfume store. The project includes product browsing, shopping cart functionality, user login/registration, reviews, forum-style pages, and admin management.
 
 ## Features
 
@@ -98,6 +105,7 @@ The admin panel is available at:
 
 - `adminlogin.php`
 - `admin.php`
+
 ## App Login details for Admin
 
 - Username: Admin001@gmail.com
@@ -114,4 +122,3 @@ Create an admin user in the `users` table with the `role` set to `admin` before 
 ## License
 
 This project is for educational/demo use unless otherwise specified by the project owner.
-
