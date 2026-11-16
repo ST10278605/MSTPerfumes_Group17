@@ -61,6 +61,10 @@ For more detailed guidance, we also included a "Download User Manual" button at 
 
 <img width="1056" height="555" alt="6" src="https://github.com/user-attachments/assets/dcc8974f-69d6-4ba9-b5c3-f5ee00230c75" />
 
+### Database Screenshot
+<img width="1501" height="964" alt="FIREBASE SCREENSHOT MST" src="https://github.com/user-attachments/assets/ff2338b5-6ea3-41bd-bf18-9b9254d70617" />
+
+
 # WEBSITE FEATURES
 ### Registration / Sign-Up Screen
 
