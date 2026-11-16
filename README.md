@@ -3,6 +3,10 @@
 ## Video link for App Presentation
 https://drive.google.com/file/d/1uC9yH4C8FeUr7D5rOXt0N5QIRzWn4A2F/view?pli=1
 
+## Active DevOps Link 
+https://dev.azure.com/ST10446802/MST%20PERFUMES  
+
+
 # MOBILE APPLICATION SCREENSHOTS & FEATURES
 ### User Registration and Secure Login Interface
 
